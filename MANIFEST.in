@@ -1,0 +1,9 @@
+# Include info files
+
+include README.md
+include LICENSE
+
+# Include examples
+
+include examples/data.cdResult
+include examples/*.py

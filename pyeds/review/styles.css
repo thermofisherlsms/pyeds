@@ -1,0 +1,157 @@
+
+body{
+    margin: 12pt;
+    font-size: 9pt;
+    font-family: Arial, Verdana, Geneva, Helvetica, sans-serif;
+}
+
+a{color: #00a;}
+a:hover {text-decoration: underline;}
+a:visited {color: #00a;}
+
+h1{
+    font-size: 1.5em;
+    text-align: left;
+    margin: 1em 0;
+    border-bottom: 3px double #000;
+}
+
+h2{font-size: 1.5em;}
+h3{font-size: 1.3em;}
+h4{font-size: 1.2em;}
+h5{font-size: 1.1em;}
+h6{font-size: 1.0em;}
+
+h2, h3, h4, h5, h6 {margin: 1em;}
+
+table{
+    border-collapse: collapse;
+    margin: 5pt 0;
+    border-left: 5pt solid #aaa;
+}
+
+thead{
+    display: table-header-group;
+    page-break-after: always;
+}
+
+thead::after {
+    content: ''; display: block;
+    page-break-before: avoid;
+    page-break-inside: avoid;
+    page-break-after: avoid;
+}
+
+th, td{
+    font-size: 9pt;
+    border: 1px solid #aaa;
+    padding: .3em;
+    vertical-align: top;
+    text-align: left;
+    white-space: pre;
+}
+
+th{
+    text-align: center;
+    color: #000;
+    background-color: #ccc;
+}
+
+.sortable th{
+    cursor: n-resize;
+}
+
+td{
+    position: relative;
+}
+
+body > table > tbody > tr:hover{
+    background-color: #ddd;
+}
+
+.left{text-align: left;}
+.right{text-align: right;}
+.center{text-align: center;}
+.top{vertical-align: top;}
+.middle{vertical-align: middle;}
+.bottom{vertical-align: bottom;}
+.nowrap{white-space: nowrap;}
+.nopadding{padding: 0;}
+.pagebreak{page-break-after: always;}
+
+.level1{border-left-color: #1047b9; margin-left: 0pt}
+.level2{border-left-color: #328c00; margin-left: 5pt}
+.level3{border-left-color: #f19000; margin-left: 10pt}
+.level4{border-left-color: #4cc7c5; margin-left: 15pt}
+.level5{border-left-color: #8f8f15; margin-left: 20pt}
+.level6{border-left-color: #267aff; margin-left: 25pt}
+.level7{border-left-color: #268f49; margin-left: 30pt}
+.level8{border-left-color: #edbb00; margin-left: 35pt}
+.level9{border-left-color: #786dff; margin-left: 40pt}
+
+.checked{
+    font-size: 11pt;
+    line-height: 15pt;
+    margin: 0 .25em;
+    cursor: default;
+}
+
+.tags{
+    font-size: 20pt;
+    line-height: 13pt;
+    margin: 0 .25em;
+    cursor: default;
+}
+
+.enumstat{
+    border: 1px solid #aaa;
+    padding: .3em;
+    vertical-align: top;
+    text-align: left;
+    
+    width: 6pt !important;
+    height: 9pt !important;
+    font-size: 0em;
+}
+
+.ddmap{
+    margin: 0;
+    border: none;
+    width: 100%;
+}
+
+.ddmap td{
+    border-width: 0 1px;
+}
+
+.ddmap td.ddgroup{
+    border-left-width: 3px;
+}
+
+.ddonoff,
+.ddstatus{
+    width: auto;
+    margin: 2pt;
+}
+
+.ddonoff td,
+.ddstatus td{
+	display: inline-block;
+    width: 6pt !important;
+    min-width: 6pt !important;
+    height: 9pt !important;
+    border-width: 1px;
+    margin: 0 .5pt;
+    font-size: 0em;
+}
+
+.ddonoff td:hover,
+.ddstatus td:hover{
+    border-color: #444;
+}
+
+.ddonoff td.ddgroup,
+.ddstatus td.ddgroup{
+    margin: 0 5pt;
+    border-width: 1px;
+}
