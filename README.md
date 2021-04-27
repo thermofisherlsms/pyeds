@@ -123,22 +123,15 @@ review.Show()
 ## Installation
 
 The *PyEDS* library is fully implemented in Python. No additional compiler is necessary. After downloading the source
-code just run the following command from the *pyeds* folder:
+code just run the following command from the folder containing the *setup.py*. Unfortunately there is already a package
+with the same name on *pypi.org* therefore we cannot distribute it there.
+
 
 ```$ python setup.py install```
 
 or
 
 ```$ pip install .```
-
-or
-
-```$ pip install pyeds-#.#.#.tar.gz```
-
-or simply
-
-```$ pip install pyeds```
-
 
 ## Disclaimer
 
