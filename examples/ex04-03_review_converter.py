@@ -9,7 +9,7 @@ import pyeds
 class MyFormulaConverter(pyeds.review.StringValueConverter):
     """Formats elemental composition formula to use subscript."""
     
-    def Convert(self, prop):
+    def Convert(self, prop, **kwargs):
         """Converts given property value."""
         
         # check value
