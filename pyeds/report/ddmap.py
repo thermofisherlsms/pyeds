@@ -258,9 +258,7 @@ class DataDistributionMap(Lockable):
                 values[i] = None
         
         # create value
-        val = DataDistributionValue()
-        val.Type = self
-        val.Values = tuple(values)
+        val = DataDistributionValue(self, values)
         val.Lock()
         
         return val
@@ -523,19 +521,28 @@ class DataDistributionValue(Lockable):
     """
     
     
-    def __init__(self):
-        """Initializes a new instance of DataDistributionValue."""
+    def __init__(self, ddmap_type, values):
+        """
+        Initializes a new instance of DataDistributionValue.
+        
+        Args:
+            ddmap_type: pyeds.DataDistributionMap
+                Map definition.
+            
+            values: (?,)
+                Actual values.
+        """
         
         super().__init__()
         
-        self.Type = None
-        self.Values = None
+        self._type = ddmap_type
+        self._values = tuple(values)
     
     
     def __str__(self):
         """Gets standard string representation."""
         
-        return str(self.Values)
+        return str(self._values)
     
     
     def __repr__(self):
@@ -563,13 +570,39 @@ class DataDistributionValue(Lockable):
     def __len__(self):
         """Gets number of available boxes."""
         
-        return len(self.Values)
+        return len(self._values)
     
     
     def __iter__(self):
         """Gets values iterator."""
         
-        return self.Values.__iter__()
+        return self._values.__iter__()
+    
+    
+    @property
+    def Type(self):
+        """
+        Gets map definition.
+        
+        Returns:
+            pyeds.DataDistributionMap
+                Map definition.
+        """
+        
+        return self._type
+    
+    
+    @property
+    def Values(self):
+        """
+        Gets current values.
+        
+        Returns:
+            (?,)
+                Actual map values.
+        """
+        
+        return self._values
     
     
     def GetValue(self, index):
@@ -585,7 +618,7 @@ class DataDistributionValue(Lockable):
                 Value at specified index.
         """
         
-        return self.Values[index]
+        return self._values[index]
     
     
     def GetBox(self, index):
@@ -601,7 +634,7 @@ class DataDistributionValue(Lockable):
                 Box definition at specified index.
         """
         
-        return self.Type.GetBox(index)
+        return self._type.GetBox(index)
     
     
     def GetLevel(self, index):
@@ -618,4 +651,4 @@ class DataDistributionValue(Lockable):
         """
         
         value = self.GetValue(index)
-        return self.Type.GetLevel(value)
+        return self._type.GetLevel(value)

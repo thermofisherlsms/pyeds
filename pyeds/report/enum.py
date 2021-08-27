@@ -174,9 +174,7 @@ class EnumDataType(Lockable):
             return None
         
         # create value
-        val = EnumValue()
-        val.Type = self
-        val.Value = int(value)
+        val = EnumValue(self, value)
         val.Lock()
         
         return val
@@ -343,7 +341,7 @@ class EnumValue(Lockable):
     Attributes:
         
         Type: pyeds.EnumDataType
-            Full definition of the enum.
+            Enum definition.
         
         Value: int
             Actual value.
@@ -359,13 +357,22 @@ class EnumValue(Lockable):
     """
     
     
-    def __init__(self):
-        """Initializes a new instance of EnumValue."""
+    def __init__(self, enum_type, value):
+        """
+        Initializes a new instance of EnumValue.
+        
+        Args:
+            enum_type: pyeds.EnumDataType
+                Enum definition.
+            
+            value: int
+                Actual value.
+        """
         
         super().__init__()
         
-        self.Type = None
-        self.Value = None
+        self._type = enum_type
+        self._value = int(value)
     
     
     def __str__(self):
@@ -383,7 +390,7 @@ class EnumValue(Lockable):
     def __hash__(self):
         """Gets value hash."""
         
-        return hash(self.Value)
+        return hash(self._value)
     
     
     def __eq__(self, other):
@@ -417,10 +424,36 @@ class EnumValue(Lockable):
     
     
     @property
+    def Type(self):
+        """
+        Gets enum definition.
+        
+        Returns:
+            pyeds.EnumDataType
+                Enum definition.
+        """
+        
+        return self._type
+    
+    
+    @property
+    def Value(self):
+        """
+        Gets current int value.
+        
+        Returns:
+            int
+                Actual value.
+        """
+        
+        return self._value
+    
+    
+    @property
     def IsFlagsEnum(self):
         """Checks whether this value is flags enum."""
         
-        return self.Type.IsFlagsEnum
+        return self._type.IsFlagsEnum
     
     
     @property
@@ -433,7 +466,7 @@ class EnumValue(Lockable):
                 Current elements.
         """
         
-        return self.Type.GetElements(self.Value)
+        return self._type.GetElements(self._value)
     
     
     @property
@@ -471,8 +504,8 @@ class EnumValue(Lockable):
             value = value.Value
         
         # check zeros
-        if self.Value == 0 or value == 0:
+        if self._value == 0 or value == 0:
             return False
         
         # compare flags
-        return (self.Value & value) == value
+        return (self._value & value) == value
