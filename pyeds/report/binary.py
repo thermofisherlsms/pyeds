@@ -78,8 +78,8 @@ class Binary(object):
             
             # use zlib
             elif self._value:
-                mol_string = zlib.decompress(self._value, wbits=32 + zlib.MAX_WBITS)
-                if mol_string:
-                    self._unzipped = mol_string.decode("utf-8") 
+                data = zlib.decompress(self._value, wbits=32 + zlib.MAX_WBITS)
+                if data:
+                    self._unzipped = data.decode("utf-8")
         
         return self._unzipped
