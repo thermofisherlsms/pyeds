@@ -276,6 +276,12 @@ class EnumElement(Lockable):
         return "%s(%s)" % (self.__class__.__name__, self.__str__())
     
     
+    def __hash__(self):
+        """Gets value hash."""
+        
+        return hash(self.Value)
+    
+    
     def __eq__(self, other):
         """Equal operator."""
         
@@ -372,6 +378,12 @@ class EnumValue(Lockable):
         """Gets debug string representation."""
         
         return "%s(%s)" % (self.__class__.__name__, self.__str__())
+    
+    
+    def __hash__(self):
+        """Gets value hash."""
+        
+        return hash(self.Value)
     
     
     def __eq__(self, other):
