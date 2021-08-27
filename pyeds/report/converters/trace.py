@@ -3,7 +3,7 @@
 # import modules
 import zlib
 import struct
-from .common import register, ValueConverter
+from .converter import register, ValueConverter
 
 
 @register("2282755A-9FAE-4BB6-AA4D-CAE84E46303B")

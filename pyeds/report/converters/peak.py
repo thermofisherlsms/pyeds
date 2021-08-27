@@ -6,7 +6,7 @@ import zipfile
 import base64
 import xml.etree.cElementTree as eTree
 from io import BytesIO
-from .common import register, ValueConverter
+from .converter import register, ValueConverter
 
 # define constants
 GAUSSIAN_FWHM = 2*math.sqrt(-2*math.log(0.5)) / math.sqrt(2)

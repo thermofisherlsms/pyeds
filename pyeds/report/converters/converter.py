@@ -37,11 +37,11 @@ class ValueConverter(object):
     
     def Convert(self, value):
         """
-        Converts property value.
+        Converts raw property value into its final type.
         
         Args:
             value: ?
-                Property value to convert.
+                Raw property value to convert.
         
         Returns:
             ?
@@ -49,27 +49,19 @@ class ValueConverter(object):
         """
         
         raise NotImplementedError()
-
-
-class ZippedStringConverter(ValueConverter):
-    """
-    The pyeds.ZippedStringConverter class is used to convert binary data into
-    string by unzipping.
-    """
     
     
-    def Convert(self, value):
+    def Revert(self, value):
         """
-        Converts zipped binary data into string.
+        Revert property value back into its raw type.
         
         Args:
-            value: pyeds.Binary
-                Binary data as stored in result file.
+            value: ?
+                Property value to convert.
         
         Returns:
-            str or None
-                Unzipped string data.
+            ?
+                Raw property value.
         """
         
-        # unzip data
-        return value.Unzipped if value else None
+        raise NotImplementedError()

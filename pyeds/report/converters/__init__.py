@@ -1,8 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # import objects
-from .common import CONVERTERS, register
-from .common import ValueConverter, ZippedStringConverter
+from .converter import CONVERTERS, register, ValueConverter
 
 from . import arrays
 from . import spectrum

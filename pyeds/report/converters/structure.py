@@ -2,14 +2,14 @@
 
 # import modules
 import re
-from .common import register, ZippedStringConverter
+from .converter import register, ValueConverter
 
 # define constants
 MOL_PATTERN = re.compile("(?:^(?:(?:\d| ){3}){11}.{0,6}){1}[\s\S]*", re.M)
 
 
 @register("BC434B48-7273-488B-8590-BB32AEB9712C")
-class MolStructureConverter(ZippedStringConverter):
+class MolStructureConverter(ValueConverter):
     """
     The pyeds.MolStructureConverter class is used to convert binary data of
     structure into a MOL string.

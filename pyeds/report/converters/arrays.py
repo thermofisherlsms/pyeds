@@ -2,7 +2,8 @@
 
 # import modules
 import struct
-from .common import register, ValueConverter
+from .converter import register, ValueConverter
+from ..binary import Binary
 
 
 @register("38448540-6FA7-43CE-9B83-48383DDB282D")
@@ -48,7 +49,7 @@ class DoubleArrayConverter(ValueConverter):
 @register("B8336E98-B9AF-4213-BF96-91D14FE44E99")
 class IntArrayConverter(ValueConverter):
     """
-    The pyeds.IntArrayConverter is used to convert binary arrays of double
+    The pyeds.IntArrayConverter is used to convert binary arrays of integers
     into (int,).
     """
     

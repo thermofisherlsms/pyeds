@@ -2,7 +2,7 @@
 
 # import modules
 import xml.etree.cElementTree as etree
-from .common import register, ValueConverter
+from .converter import register, ValueConverter
 from .spectrum import Centroid
 
 

@@ -2,7 +2,7 @@
 
 # import modules
 import xml.etree.cElementTree as etree
-from .common import register, ValueConverter
+from .converter import register, ValueConverter
 
 
 @register("ED0FB1D9-4E07-47E1-B96C-4013B9AFE534")
