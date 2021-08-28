@@ -49,19 +49,3 @@ class ValueConverter(object):
         """
         
         raise NotImplementedError()
-    
-    
-    def Revert(self, value):
-        """
-        Revert property value back into its raw type.
-        
-        Args:
-            value: ?
-                Property value to convert.
-        
-        Returns:
-            ?
-                Raw property value.
-        """
-        
-        raise NotImplementedError()
