@@ -376,62 +376,18 @@ class EDS(object):
         limits = self._replace_entity_names(limits) or {}
         offsets = self._replace_entity_names(offsets) or {}
         
-        # read hierarchy for given parent
-        if parent is not None:
-            
-            children = self._read_hierarchy(
-                path = path,
-                parent = parent,
-                keep = set(keep),
-                queries = queries,
-                columns = properties,
-                excludes = excludes,
-                orders = orders,
-                descs = descs,
-                limits = limits,
-                offsets = offsets)
-            
-            for child in children:
-                yield child
-            
-            return
-        
-        # get parent entity
-        entity = path[0]
-        
-        # read parents
-        parents = self._read_items(
-            entity = entity,
-            query = queries.get(entity, None),
-            columns = properties.get(entity, None),
-            exclude = excludes.get(entity, None),
-            order = orders.get(entity, None),
-            desc = descs.get(entity, False),
-            limit = limits.get(entity, None),
-            offset = offsets.get(entity, 0))
-        
-        # read hierarchies
-        for parent in parents:
-            
-            children = self._read_hierarchy(
-                path = path,
-                parent = parent,
-                keep = set(keep),
-                queries = queries,
-                columns = properties,
-                excludes = excludes,
-                orders = orders,
-                descs = descs,
-                limits = limits,
-                offsets = offsets)
-            
-            if entity in keep:
-                parent.AddChildren(children)
-                yield parent
-            
-            else:
-                for child in children:
-                    yield child
+        # read hierarchy
+        return self._read_hierarchy(
+            path = path,
+            parent = parent,
+            keep = set(keep),
+            queries = queries,
+            columns = properties,
+            excludes = excludes,
+            orders = orders,
+            descs = descs,
+            limits = limits,
+            offsets = offsets)
     
     
     def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=set()):
@@ -494,7 +450,7 @@ class EDS(object):
             output = {}
             for key, value in input.items():
                 entity = self._report.GetDataType(key)
-                output[entity.Name] = input[key]
+                output[entity.Name] = value
         
         # replace lists
         else:
@@ -606,7 +562,10 @@ class EDS(object):
         """Reads connected items along the given path."""
         
         # get path
-        path = path[1:]
+        if parent is not None:
+            path = path[1:]
+        
+        # get entity
         entity = path[0]
         
         # get specified settings
@@ -623,31 +582,44 @@ class EDS(object):
             id_columns = self._report.GetDataType(entity).IDColumns
             cols = [x.ColumnName for x in id_columns]
         
-        # read direct children
-        children = self._read_connected(
-            entity = entity,
-            parent = parent,
-            query = query,
-            columns = cols,
-            exclude = exclude,
-            order = order,
-            desc = desc,
-            limit = limit,
-            offset = offset)
+        # read parents
+        if parent is None:
+            items = self._read_items(
+                entity = entity,
+                query = query,
+                columns = cols,
+                exclude = exclude,
+                order = order,
+                desc = desc,
+                limit = limit,
+                offset = offset)
+        
+        # read children of given parent
+        else:
+            items = self._read_connected(
+                entity = entity,
+                parent = parent,
+                query = query,
+                columns = cols,
+                exclude = exclude,
+                order = order,
+                desc = desc,
+                limit = limit,
+                offset = offset)
         
         # end of path reached
         if len(path) == 1:
-            for child in children:
-                yield child
+            for item in items:
+                yield item
             return
         
         # read further hierarchy
-        for child in children:
+        for item in items:
             
             # get further children
-            items = self._read_hierarchy(
+            children = self._read_hierarchy(
                 path = path,
-                parent = child,
+                parent = item,
                 keep = keep,
                 queries = queries,
                 columns = columns,
@@ -659,13 +631,13 @@ class EDS(object):
             
             # keep this entity
             if entity in keep:
-                child.AddChildren(items)
-                yield child
-                continue
+                item.AddChildren(children)
+                yield item
             
             # keep children only
-            for item in items:
-                yield item
+            else:
+                for child in children:
+                    yield child
     
     
     def _sql_initialize(self, data_type, columns, exclude, names):
