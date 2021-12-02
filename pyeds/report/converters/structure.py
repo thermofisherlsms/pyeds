@@ -34,7 +34,7 @@ class MolStructureConverter(ValueConverter):
             return None
         
         # unzip MOL string
-        mol = value.Unzipped
+        mol = value.Unzip()
         if not mol:
             return None
         

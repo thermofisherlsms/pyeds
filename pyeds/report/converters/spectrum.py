@@ -31,7 +31,7 @@ class MassSpectrumConverter(ValueConverter):
             return None
         
         # parse data
-        return MassSpectrumParser().parse(value.Unzipped)
+        return MassSpectrumParser().parse(value.Unzip())
 
 
 class MassSpectrumParser(object):

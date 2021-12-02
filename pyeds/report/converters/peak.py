@@ -45,7 +45,7 @@ class PeakModelValueConverter(ValueConverter):
             return None
         
         # parse data
-        return PeakModelParser().parse(value.Unzipped)
+        return PeakModelParser().parse(value.Unzip())
 
 
 class PeakModelParser(object):

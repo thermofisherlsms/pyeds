@@ -10,17 +10,16 @@ class Binary(object):
     """
     The pyeds.Binary class is used to hold the actual binary data retrieved by
     retrieved by pyeds.EDS reader. The actual value can be accessed via 'Value'
-    property. Since most of the binary data are compressed, this class provides
+    property.
+    
+    Since most of the binary data are compressed, this class provides
     a convenient way to apply appropriate decompression and get the data in its
-    native form via 'Unzipped' property.
+    native form via 'Unzip' method.
     
     Attributes:
         
         Value: buffer
             Raw data as stored in database.
-        
-        Unzipped: ?
-            Decompressed value.
     """
     
     
@@ -28,7 +27,6 @@ class Binary(object):
         """Initializes a new instance of Binary."""
         
         self._value = value
-        self._unzipped = None
     
     
     def __str__(self):
@@ -56,8 +54,7 @@ class Binary(object):
         return self._value
     
     
-    @property
-    def Unzipped(self):
+    def Unzip(self):
         """
         Gets unzipped value.
         
@@ -66,20 +63,15 @@ class Binary(object):
                 Decompressed value.
         """
         
-        if self._unzipped is None:
-            
-            # use zipfile
-            data = BytesIO(self._value)
-            if zipfile.is_zipfile(data):
-                
-                with zipfile.ZipFile(data) as zf:
-                    name = zf.namelist()[0]
-                    self._unzipped = zf.read(name)
-            
-            # use zlib
-            elif self._value:
-                data = zlib.decompress(self._value, wbits=32 + zlib.MAX_WBITS)
-                if data:
-                    self._unzipped = data.decode("utf-8")
+        # use zipfile
+        data = BytesIO(self._value)
+        if zipfile.is_zipfile(data):
+            with zipfile.ZipFile(data) as zf:
+                name = zf.namelist()[0]
+                return zf.read(name)
         
-        return self._unzipped
+        # use zlib
+        elif self._value:
+            data = zlib.decompress(self._value, wbits=32 + zlib.MAX_WBITS)
+            if data:
+                return data.decode("utf-8")

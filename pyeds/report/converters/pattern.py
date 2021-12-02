@@ -32,7 +32,7 @@ class IsotopePatternConverter(ValueConverter):
             return None
         
         # parse data
-        return IsotopePatternParser().parse(value.Unzipped)
+        return IsotopePatternParser().parse(value.Unzip())
 
 
 class IsotopePatternParser(object):
