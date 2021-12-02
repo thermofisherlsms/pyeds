@@ -577,10 +577,9 @@ class EDS(object):
         limit = limits.get(entity, None)
         offset = offsets.get(entity, 0)
         
-        # use ID columns only
-        if not cols and entity not in keep and len(path) != 1:
-            id_columns = self._report.GetDataType(entity).IDColumns
-            cols = [x.ColumnName for x in id_columns]
+        # use just ID columns if to keep
+        if entity not in keep and cols is None and len(path) != 1:
+            cols = []
         
         # read parents
         if parent is None:
@@ -643,11 +642,15 @@ class EDS(object):
     def _sql_initialize(self, data_type, columns, exclude, names):
         """Initializes selection SQL query from data type and requested columns."""
         
+        # get all columns
+        if columns is None and not exclude:
+            columns = "*"
+        
         # get specified columns
-        if columns or exclude:
+        else:
             
             # get names
-            if not columns:
+            if columns is None:
                 columns = set(names.values())
             else:
                 columns = set(names[c] for c in columns)
@@ -663,13 +666,7 @@ class EDS(object):
             
             # make identifiers
             columns = ('"%s"' % c for c in columns)
-            
-            # join
             columns = ", ".join(columns)
-        
-        # get all columns:
-        else:
-            columns = "*"
         
         return 'SELECT %s FROM "%s"' % (columns, data_type.TableName)
     
