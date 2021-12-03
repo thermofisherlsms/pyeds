@@ -175,7 +175,8 @@ class EntityItem(Lockable):
                 Default value to return if property does not exist.
             
             silent: bool
-                If set to True
+                If set to True and property does not exist, default value is
+                returned.
         
         Returns:
             ?
@@ -305,7 +306,7 @@ class EntityItem(Lockable):
             self._children.append(item)
     
     
-    def AddValue(self, value, name, position=None, align=None, format=None, converter=None):
+    def AddValue(self, value, name, position=None, align=None, template=None, converter=None):
         """
         Adds user value to current item. This method should be used to include
         custom values into a pyeds.Review. Note that when added, the value is
@@ -325,7 +326,7 @@ class EntityItem(Lockable):
             align: int or None
                 Cell alignment as 1 - left, 2 - center or 3 - right.
             
-            format: str or None
+            template: str or None
                 Python formatting string (e.g.'{:.2f}') to be used when the
                 value is shown in a review.
             
@@ -348,7 +349,7 @@ class EntityItem(Lockable):
         column = PropertyColumn()
         column.ColumnName = name
         column.DisplayName = name
-        column.FormatString = format
+        column.FormatString = template
         column.VisiblePosition = position
         column.TextHAlign = align
         column.GridCellControlGuid = converter

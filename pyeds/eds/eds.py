@@ -158,7 +158,7 @@ class EDS(object):
         values = []
         
         # finalize query
-        sql, values = self._sql_finalize(sql, values, names, query)
+        sql, values = self._sql_finalize_select(sql, values, names, query)
         
         # execute SQL query
         results = self._report.Execute(sql, values)
@@ -198,7 +198,7 @@ class EDS(object):
         values = []
         
         # finalize query
-        sql, values = self._sql_finalize(sql, values, names, query)
+        sql, values = self._sql_finalize_select(sql, values, names, query)
         
         # execute SQL query
         results = self._report.Execute(sql, values)
@@ -496,11 +496,11 @@ class EDS(object):
         names, ambiguous = self._get_column_names(data_type)
         
         # init query
-        sql = self._sql_initialize(data_type, columns, exclude, names)
+        sql = self._sql_initialize_select(data_type, columns, exclude, names)
         values = []
         
         # finalize query
-        sql, values = self._sql_finalize(sql, values, names, query, order, desc, limit, offset)
+        sql, values = self._sql_finalize_select(sql, values, names, query, order, desc, limit, offset)
         
         # execute query
         results = self._report.Execute(sql, values)
@@ -527,7 +527,7 @@ class EDS(object):
         
         # init query
         excl = exclude if not ambiguous else []
-        sql = self._sql_initialize(data_type, columns, excl, names)
+        sql = self._sql_initialize_select(data_type, columns, excl, names)
         values = []
         
         # add link IDs
@@ -544,7 +544,7 @@ class EDS(object):
         sql += ' WHERE (%s)' % (' AND '.join(ids))
         
         # finalize query
-        sql, values = self._sql_finalize(sql, values, names, query, order, desc, limit, offset)
+        sql, values = self._sql_finalize_select(sql, values, names, query, order, desc, limit, offset)
         
         # execute query
         results = self._report.Execute(sql, values)
@@ -638,8 +638,32 @@ class EDS(object):
                 for child in children:
                     yield child
     
+    def _update_last_change(self, table_name, columns):
+        """Updates last change time stamp for given columns."""
+        
+        # get current time stamp
+        stamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep=" ")
+        stamp = stamp.replace('+00:00', 'Z')
+        
+        # update columns
+        for col in columns:
+            col.Unlock()
+            col.LastChange = stamp
+            col.Lock()
+        
+        # make query
+        sql = 'UPDATE "%s" SET LastChange = ? WHERE ColumnId = ?' % (table_name, )
+        
+        # get values
+        values = [(c.LastChange, c.ID) for c in columns]
+        
+        # execute query
+        self._report.ExecuteMany(sql, values)
     
-    def _sql_initialize(self, data_type, columns, exclude, names):
+    
+    
+    
+    def _sql_initialize_select(self, data_type, columns, exclude, names):
         """Initializes selection SQL query from data type and requested columns."""
         
         # get all columns
@@ -671,7 +695,7 @@ class EDS(object):
         return 'SELECT %s FROM "%s"' % (columns, data_type.TableName)
     
     
-    def _sql_finalize(self, sql, values, names, query=None, order=None, desc=False, limit=None, offset=0):
+    def _sql_finalize_select(self, sql, values, names, query=None, order=None, desc=False, limit=None, offset=0):
         """Finalizes SQL query by adding conditions, sorting and range."""
         
         # add query

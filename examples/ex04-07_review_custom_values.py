@@ -15,7 +15,7 @@ with eds, review:
     for item in items:
         
         # add custom values
-        item.AddValue(item.MolecularWeight+1.007276, "MZ [M+H]", align=3, format="{:.5f}")
+        item.AddValue(item.MolecularWeight+1.007276, "MZ [M+H]", align=3, template="{:.5f}")
         
         # insert item
         review.InsertItem(item, hide=['ID'])

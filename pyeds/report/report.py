@@ -366,9 +366,6 @@ class Report(object):
     def _extract_enum_data_types(self):
         """Reads all enum data types from current file."""
         
-        # init buffers
-        elements = []
-        
         # extract enum types
         cur = self._db.execute("SELECT * FROM EnumDataTypes")
         for data in cur:
