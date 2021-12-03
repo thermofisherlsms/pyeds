@@ -1,6 +1,10 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # import modules
+import datetime
+import time
+import shutil
+
 from .database import Database
 from .column import PropertyColumn
 from .conn import DataTypeConnection
@@ -272,6 +276,19 @@ class Report(object):
         
         # execute sql query
         return self._db.execute(sql, values)
+    
+    
+    def Backup(self):
+        """Creates database backup."""
+        
+        # get time stamp
+        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+        
+        # init file name
+        filename = "%s_%s.bak" % (self._db.path, stamp)
+        
+        # duplicate file
+        shutil.copy(self._db.path, filename)
     
     
     def _initialize(self):
