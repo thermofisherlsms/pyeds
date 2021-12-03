@@ -362,3 +362,65 @@ class EntityItem(Lockable):
         # add property
         self._properties.append(prop)
         self._names[name] = len(self._properties) - 1
+    
+    
+    def Check(self, value=True):
+        """
+        Sets current checked state according to given value.
+        
+        Note that the updated value is not persisted automatically in the
+        database. This must be done manually by 'pyeds.EDS.Update' method.
+        
+        Args:
+            value: bool
+                Checked state to set.
+        """
+        
+        # check if checkable
+        if 'Checked' not in self._names:
+            message = "'%s' is not checkable!" % (self._type.Name,)
+            raise KeyError(message)
+        
+        # get property
+        prop = self.GetProperty('Checked')
+        
+        # update property
+        prop.Unlock()
+        prop.SetValue(bool(value))
+        prop.Lock()
+    
+    
+    def Tag(self, index, value=True):
+        """
+        Sets specified tag state according to given value.
+        
+        Note that if an invisible tag is set, it does not make it visible. This
+        must be done manually in the main application.
+        
+        Note that the updated value is not persisted automatically in the
+        database. This must be done manually by 'pyeds.EDS.Update' method.
+        
+        Args:
+            index: int
+                Index of the tag to set.
+            
+            value: bool
+                Tag state to set.
+        """
+        
+        # check if taggable
+        if 'Tags' not in self._names:
+            message = "'%s' is not taggable!" % (self._type.Name,)
+            raise KeyError(message)
+        
+        # get property
+        prop = self.GetProperty('Tags')
+        
+        # create updated value
+        tags = list(prop.Value.Values)
+        tags[index] = value or None
+        
+        # update property
+        prop.Unlock()
+        prop.SetValue(tags)
+        prop.Lock()
