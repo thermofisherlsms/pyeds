@@ -24,7 +24,7 @@ class PropertyValue(Lockable):
             Property value converted into its final type.
         
         RawValue: ?
-            Original value as stored in database.
+            Original value as stored in the database.
     """
     
     
@@ -37,7 +37,7 @@ class PropertyValue(Lockable):
                 Value type definition.
             
             value: ?
-                Raw value as stored in report file.
+                Raw value as stored in the database.
         """
         
         super().__init__()
@@ -107,7 +107,7 @@ class PropertyValue(Lockable):
     @property
     def RawValue(self):
         """
-        Gets original value as stored in the report file.
+        Gets original value as stored in the database.
         
         Returns:
             ?
@@ -120,11 +120,11 @@ class PropertyValue(Lockable):
     def _convert_value(self, value):
         """Converts raw value to final type."""
         
-        # convert value to custom data type first (e.g. string, int, binary)
+        # convert value to custom data type (e.g. string, int, binary)
         if self._type.CustomDataType is not None:
             value = self._type.CustomDataType.Convert(value)
         
-        # convert value to special value type if needed (e.g. enum, ddmap)
+        # convert value to special value type (e.g. enum, ddmap)
         if self._type.SpecialValueType is not None:
             value = self._type.SpecialValueType.Convert(value)
         

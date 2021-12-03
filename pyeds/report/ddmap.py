@@ -3,6 +3,11 @@
 # import modules
 import struct
 from .lockable import Lockable
+from .binary import Binary
+
+# define constants
+_FORMAT = {'Int': "i?", 'Int64': "q?", 'Double': "d?", 'Boolean': "??"}
+_TYPE = {'Int': int, 'Int64': int, 'Double': float, 'Boolean': bool}
 
 
 class DataDistributionMap(Lockable):
@@ -212,40 +217,27 @@ class DataDistributionMap(Lockable):
     
     def Convert(self, value):
         """
-        Parses binary value.
+        Converts original database value to data distribution value.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
         
         Args:
             value: pyeds.Binary or None
-                Raw value as stored in DB.
+                Original database value to be converted.
         
         Returns:
-            pyeds.DataDistributionValue
-                Parsed value or None.
+            pyeds.DataDistributionValue or None
+                Parsed data distribution value.
         """
         
         # check value
         if value is None:
             return None
         
-        # get single value format
-        if self.CustomDataType.Name == 'Int':
-            f = "i?"
-        
-        elif self.CustomDataType.Name == 'Int64':
-            f = "q?"
-        
-        elif self.CustomDataType.Name == 'Double':
-            f = "d?"
-        
-        elif self.CustomDataType.Name == 'Boolean':
-            f = "??"
-        
-        else:
-            message = "'%s' is not supported custom data type! %s" % self.CustomDataType.Name
-            raise TypeError(message)
-        
-        # get size
+        # get size and format
         size = len(self.Boxes)
+        f = _FORMAT[self.CustomDataType.Name]
         
         # unpack data
         data = struct.unpack_from("<"+f*size, value.Value)

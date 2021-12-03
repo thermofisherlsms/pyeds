@@ -37,11 +37,11 @@ class ValueConverter(object):
     
     def Convert(self, value):
         """
-        Converts raw property value into its final type.
+        Converts original database value to its final type.
         
         Args:
             value: ?
-                Raw property value to convert.
+                Original database value to be converted.
         
         Returns:
             ?

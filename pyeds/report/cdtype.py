@@ -50,18 +50,18 @@ class CustomDataType(Lockable):
     
     def Convert(self, value):
         """
-        Converts original database value to current type.
+        Converts original database value to current type value.
         
         This method is not intended to be used by user. It is used automatically
         by the library itself.
         
         Args:
             value: ?
-                Native value to be converted.
+                Original database value to be converted.
             
         Returns:
             ?
-                Given value converted into current type.
+                Value converted into current type.
         """
         
         if value is None:

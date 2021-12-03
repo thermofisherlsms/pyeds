@@ -661,8 +661,6 @@ class EDS(object):
         self._report.ExecuteMany(sql, values)
     
     
-    
-    
     def _sql_initialize_select(self, data_type, columns, exclude, names):
         """Initializes selection SQL query from data type and requested columns."""
         
