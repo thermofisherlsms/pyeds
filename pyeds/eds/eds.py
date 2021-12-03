@@ -1,6 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # import modules
+import datetime
 from ..report import Report
 from .entity import EntityItem
 from .prop import PropertyValue
@@ -390,6 +391,47 @@ class EDS(object):
             offsets = offsets)
     
     
+    def Update(self, items, properties, save=True):
+        """
+        Updates specified properties of given items.
+        
+        Be sure to backup your original results before making any changes! You
+        can use the pero.EDS.Report.Backup method.
+        
+        Note, that all items must be of the same entity type. ID properties,
+        connection properties and newly added properties cannot be updated.
+        
+        Args:
+            items: (pyeds.EntityItem,)
+                Items to update.
+            
+            properties: (str,)
+                Names of properties to update.
+            
+            save: bool
+                If set to True, database changes are commit. Otherwise all the
+                changes are lost when current connection closes.
+        """
+        
+        # check items
+        if not items or not properties:
+            return
+        
+        # get data type
+        data_type = items[0].Type
+        
+        # check same entity
+        if any(d.Type.ID != data_type.ID for d in items):
+            raise ValueError("All items must be of the same entity!")
+        
+        # update items
+        self._update_items(items, properties)
+        
+        # commit changes
+        if save:
+            self._report.Save()
+    
+    
     def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=set()):
         """Finds paths between two data types."""
         
@@ -637,6 +679,45 @@ class EDS(object):
             else:
                 for child in children:
                     yield child
+    
+    
+    def _update_items(self, items, columns):
+        """Updates specified properties of given items."""
+        
+        # get data type
+        data_type = self._report.GetDataType(items[0].Type.Name)
+        
+        # get IDs
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # select columns
+        names, ambiguous = self._get_column_names(data_type)
+        columns = set(names[c] for c in columns)
+        columns = list(columns.difference(id_columns))
+        
+        # finalize columns
+        cols = ('"%s" = ?' % c for c in columns)
+        cols = ", ".join(cols)
+        
+        # finalize IDs
+        ids = ('"%s" = ?' % c for c in id_columns)
+        ids = " AND ".join(ids)
+        
+        # make query
+        sql = 'UPDATE "%s" SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        
+        # get values
+        values = []
+        for item in items:
+            values.append([item.GetProperty(c).RawValue for c in columns + id_columns])
+        
+        # execute query
+        self._report.ExecuteMany(sql, values)
+        
+        # log change
+        columns = [data_type.GetColumn(c) for c in columns]
+        self._update_last_change("DataTypesColumns", columns)
+    
     
     def _update_last_change(self, table_name, columns):
         """Updates last change time stamp for given columns."""
