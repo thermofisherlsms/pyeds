@@ -245,6 +245,27 @@ class EntityItem(Lockable):
         return tuple(props)
     
     
+    def SetValue(self, prop_name, value):
+        """
+        Sets given value to specified property.
+        
+        Args:
+            prop_name: str
+                Property name.
+            
+            value: ?
+                Value to set.
+        """
+        
+        # get property
+        prop = self.GetProperty(prop_name)
+        
+        # set value to property
+        prop.Unlock()
+        prop.SetValue(value)
+        prop.Lock()
+    
+    
     def SetProperties(self, props):
         """
         Sets property values from given data.
@@ -381,13 +402,8 @@ class EntityItem(Lockable):
             message = "'%s' is not checkable!" % (self._type.Name,)
             raise KeyError(message)
         
-        # get property
-        prop = self.GetProperty('Checked')
-        
         # update property
-        prop.Unlock()
-        prop.SetValue(bool(value))
-        prop.Lock()
+        self.SetValue('Checked', bool(value))
     
     
     def Tag(self, index, value=True):
@@ -421,6 +437,4 @@ class EntityItem(Lockable):
         tags[index] = value or None
         
         # update property
-        prop.Unlock()
-        prop.SetValue(tags)
-        prop.Lock()
+        self.SetValue('Tags', tags)
