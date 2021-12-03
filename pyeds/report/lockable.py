@@ -6,7 +6,7 @@ class Lockable(object):
     The pyeds.Lockable class provides a simple mechanism to prevent any
     accidental attribute changes of a derived classes instances. It is used by
     most of the pyeds classes to lock them after initialization to avoid damage
-    of the internal data consistency.
+    of the internal data.
     """
     
     
@@ -20,10 +20,10 @@ class Lockable(object):
         """Sets instance attribute if allowed."""
         
         if name == '_locked' or not getattr(self, '_locked', False):
-            super(Lockable, self).__setattr__(name, value)
+            super().__setattr__(name, value)
         
         else:
-            message = "%s instance is read-only! Use Unlock() first, but be cautious!" % self.__class__.__name__
+            message = "%s instance is read-only! Use Unlock() first or dedicated 'set' method, but be cautious!" % self.__class__.__name__
             raise AttributeError(message)
     
     
