@@ -117,6 +117,29 @@ class PropertyValue(Lockable):
         return self._raw_value
     
     
+    def SetValue(self, value):
+        """
+        Sets given value to property.
+        
+        Args:
+            value: ?
+                Value to set.
+        """
+        
+        # convert naive value
+        value = self._create_value(value)
+        
+        # skip if same
+        if value == self._value:
+            return
+        
+        # set raw value
+        self._raw_value = self._revert_value(value)
+        
+        # set new value
+        self._value = value
+    
+    
     def _convert_value(self, value):
         """Converts raw value to final type."""
         
@@ -131,5 +154,41 @@ class PropertyValue(Lockable):
         # apply specific converter (e.g. traces, spectra)
         if self._type.ValueTypeConverter is not None:
             value = self._type.ValueTypeConverter.Convert(value)
+        
+        return value
+    
+    
+    def _revert_value(self, value):
+        """Reverts final value to raw type."""
+        
+        # apply specific converter (e.g. traces, spectra)
+        if self._type.ValueTypeConverter is not None:
+            value = self._type.ValueTypeConverter.Revert(value)
+        
+        # convert value from special value type (e.g. enum, ddmap)
+        if self._type.SpecialValueType is not None:
+            value = self._type.SpecialValueType.Revert(value)
+        
+        # convert value from custom data type (e.g. string, int, binary)
+        if self._type.CustomDataType is not None:
+            value = self._type.CustomDataType.Revert(value)
+        
+        return value
+    
+    
+    def _create_value(self, value):
+        """Creates final value from naive data."""
+        
+        # apply specific converter (e.g. traces, spectra)
+        if self._type.ValueTypeConverter is not None:
+            return self._type.ValueTypeConverter.Create(value)
+        
+        # convert value to special value type (e.g. enum, ddmap)
+        if self._type.SpecialValueType is not None:
+            return self._type.SpecialValueType.Create(value)
+        
+        # convert value to custom data type (e.g. string, int, binary)
+        if self._type.CustomDataType is not None:
+            return self._type.CustomDataType.Create(value)
         
         return value

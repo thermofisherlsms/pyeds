@@ -256,6 +256,102 @@ class DataDistributionMap(Lockable):
         return val
     
     
+    def Revert(self, value):
+        """
+        Reverts data distribution value back to binary value.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: pyeds.DataDistributionValue or None
+                Data distribution value.
+        
+        Returns:
+            pyeds.Binary or None
+                Value converted into original database type.
+        """
+        
+        # check value
+        if value is None:
+            return None
+        
+        # check type
+        if not isinstance(value, DataDistributionValue):
+            message = "Value must be of type pyeds.DataDistributionValue! -> %s" % (type(value))
+            raise TypeError(message)
+        
+        # get size and format
+        size = len(self.Boxes)
+        f = _FORMAT[self.CustomDataType.Name]
+        
+        # prepare data
+        data = [0] * (2*size)
+        for i, val in enumerate(value.Values):
+            if val is None or val is False:
+                data[2*i] = 0
+                data[2*i+1] = False
+            else:
+                data[2*i] = val
+                data[2*i+1] = True
+        
+        # pack data
+        buffer = struct.pack("<"+f*size, *data)
+        
+        # create binary
+        binary = Binary(buffer)
+        
+        return binary
+    
+    
+    def Create(self, value):
+        """
+        Creates data distribution value from naive data:
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: pyeds.DataDistributionValue, tuple or list
+                Naive value to be converted.
+        
+        Returns:
+            pyeds.DataDistributionValue or None
+                Parsed data distribution value.
+        """
+        
+        # check None
+        if value is None:
+            return True
+        
+        # get values from ddmap
+        if isinstance(value, DataDistributionValue):
+            value = value.Values
+        
+        # check type
+        if not isinstance(value, (list, tuple)):
+            message = "Value must be of type pyeds.DataDistributionValue, tuple or list! -> %s" % (type(value),)
+            raise TypeError(message)
+        
+        # check size
+        if len(value) != len(self._boxes):
+            message = "Value has incorrect length!"
+            raise ValueError(message)
+        
+        # check values
+        t = _TYPE[self.CustomDataType.Name]
+        for item in value:
+            if item is not None and not isinstance(item, (t,)):
+                message = "Values must be of type %s! -> %s" % (t, type(item))
+                raise TypeError(message)
+        
+        # create value
+        val = DataDistributionValue(self, value)
+        val.Lock()
+        
+        return val
+    
+    
     @staticmethod
     def FromDBData(data):
         """
