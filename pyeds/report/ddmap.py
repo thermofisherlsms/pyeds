@@ -288,7 +288,7 @@ class DataDistributionMap(Lockable):
         # prepare data
         data = [0] * (2*size)
         for i, val in enumerate(value.Values):
-            if val is None or val is False:
+            if val is None:
                 data[2*i] = 0
                 data[2*i+1] = False
             else:

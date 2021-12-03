@@ -19,7 +19,7 @@ with pyeds.EDS("data.cdResult") as eds:
     # check item
     item.Check(True)
     
-    # turn on some tags
+    # turn on/off some tags
     item.Tag(0, True)
     item.Tag(4, False)
     

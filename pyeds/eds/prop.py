@@ -133,11 +133,17 @@ class PropertyValue(Lockable):
         if value == self._value:
             return
         
-        # set raw value
-        self._raw_value = self._revert_value(value)
+        # convert to raw value
+        raw_value = self._revert_value(value)
         
-        # set new value
+        # check null
+        if raw_value is None and not self._type.Nullable:
+            message = "'%s' is not nullable!" % (self._type.ColumnName,)
+            raise ValueError(message)
+        
+        # set values
         self._value = value
+        self._raw_value = raw_value
     
     
     def _convert_value(self, value):

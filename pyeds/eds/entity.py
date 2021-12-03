@@ -400,7 +400,7 @@ class EntityItem(Lockable):
         # check if checkable
         if 'Checked' not in self._names:
             message = "'%s' is not checkable!" % (self._type.Name,)
-            raise KeyError(message)
+            raise ValueError(message)
         
         # update property
         self.SetValue('Checked', bool(value))
@@ -427,7 +427,7 @@ class EntityItem(Lockable):
         # check if taggable
         if 'Tags' not in self._names:
             message = "'%s' is not taggable!" % (self._type.Name,)
-            raise KeyError(message)
+            raise ValueError(message)
         
         # get property
         prop = self.GetProperty('Tags')
