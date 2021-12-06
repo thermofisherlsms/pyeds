@@ -14,7 +14,7 @@ with pyeds.EDS("data.cdResult") as eds:
     
     # show original state
     print("Checked:", item.Checked)
-    print("Tags:", item.Tags.Values)
+    print("Tags:", item.Tags.Values if item.Tags else None)
     
     # check item
     item.Check(True)

@@ -432,8 +432,13 @@ class EntityItem(Lockable):
         # get property
         prop = self.GetProperty('Tags')
         
-        # create updated value
-        tags = list(prop.Value.Values)
+        # get or init tags
+        if prop.Value is None:
+            tags = [None] * len(prop.Type.SpecialValueType.Boxes)
+        else:
+            tags = list(prop.Value.Values)
+        
+        # update value
         tags[index] = value or None
         
         # update property

@@ -322,7 +322,7 @@ class DataDistributionMap(Lockable):
         
         # check None
         if value is None:
-            return True
+            return None
         
         # get values from ddmap
         if isinstance(value, DataDistributionValue):

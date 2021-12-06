@@ -121,6 +121,8 @@ class PropertyValue(Lockable):
         """
         Sets given value to property.
         
+        Note that the property must be unlocked first.
+        
         Args:
             value: ?
                 Value to set.
