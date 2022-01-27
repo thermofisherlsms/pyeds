@@ -45,6 +45,7 @@ class PropertyValue(Lockable):
         self._type = property_type
         self._raw_value = value
         self._value = self._convert_value(value)
+        self._dirty = False
     
     
     def __str__(self):
@@ -146,6 +147,40 @@ class PropertyValue(Lockable):
         # set values
         self._value = value
         self._raw_value = raw_value
+        
+        # mark as dirty
+        self._dirty = True
+    
+    
+    def Dirty(self, value=None):
+        """
+        Gets or sets property dirty flag.
+        
+        Args:
+            value: bool or None
+                If set to True or False, the value is set.
+        
+        Returns:
+            bool:
+                Current flag state.
+        """
+        
+        # set value
+        if value is not None:
+            
+            # unlock if needed
+            locked = self.Locked()
+            if locked:
+                self.Unlock()
+            
+            # set value
+            self._dirty = bool(value)
+            
+            # lock if needed
+            if locked:
+                self.Lock()
+        
+        return self._dirty
     
     
     def _convert_value(self, value):

@@ -27,6 +27,12 @@ class Lockable(object):
             raise AttributeError(message)
     
     
+    def Locked(self):
+        """Gets current state of the lock."""
+        
+        return self._locked
+    
+    
     def Lock(self):
         """Prevents further attributes changes."""
         
