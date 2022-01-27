@@ -432,13 +432,17 @@ class EDS(object):
             self._report.Save()
     
     
-    def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=set()):
+    def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=None):
         """Finds paths between two data types."""
         
         # check length
         current_length = _length + 1
         if best_length[0] <= current_length:
             return
+        
+        # be sure to set visited
+        if _visited is None:
+            _visited = set()
         
         # search within direct connections
         for conn in data_type1.Connections:
