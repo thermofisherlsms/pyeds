@@ -367,7 +367,7 @@ class EntityItem(Lockable):
             position = 1 + max((0, *(p.Type.VisiblePosition for p in self._properties)))
         
         # init column definition
-        column = PropertyColumn()
+        column = PropertyColumn(virtual=True)
         column.ColumnName = name
         column.DisplayName = name
         column.FormatString = template

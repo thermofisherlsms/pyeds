@@ -82,11 +82,16 @@ class PropertyColumn(Lockable):
     """
     
     
-    def __init__(self):
+    def __init__(self, virtual=False):
         """Initializes a new instance of PropertyColumn."""
         
         super().__init__()
         
+        # mark virtual user column
+        # (not existing in the report)
+        self.Virtual = bool(virtual)
+        
+        # main attributes
         self.ID = None
         self.ColumnName = None
         self.CustomDataType = None
