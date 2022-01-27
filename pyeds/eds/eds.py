@@ -395,7 +395,7 @@ class EDS(object):
         """
         Updates specified properties of given items.
         
-        Be sure to backup your original results before making any changes! You
+        Be sure to back up your original results before making any changes! You
         can use the pero.EDS.Report.Backup method.
         
         Note, that all items must be of the same entity type. ID properties,
@@ -419,20 +419,27 @@ class EDS(object):
         if not items:
             return
         
-        # get dirty properties
-        if properties is None:
-            properties = set()
-            for item in items:
-                for prop in item.GetProperties():
-                    if prop.Dirty():
-                        properties.add(prop.Type.ColumnName)
-        
         # get data type
         data_type = items[0].Type
         
         # check same entity
         if any(d.Type.ID != data_type.ID for d in items):
             raise ValueError("All items must be of the same entity!")
+        
+        # retrieve all dirty properties
+        if properties is None:
+            props = (prop for item in items for prop in item.GetProperties())
+            props = (prop for prop in props if (prop.Dirty() and not prop.Type.Virtual))
+            properties = set(prop.Type.ColumnName for prop in props)
+        
+        # check properties
+        for prop in properties:
+            if data_type.GetColumn(prop).Virtual:
+                raise ValueError("Custom properties cannot be saved!")
+        
+        # no properties
+        if not properties:
+            return
         
         # update items
         self._update_items(items, properties)
