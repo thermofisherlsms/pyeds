@@ -434,8 +434,8 @@ class EDS(object):
         
         # check properties
         for prop in properties:
-            if data_type.GetColumn(prop).Virtual:
-                raise ValueError("Custom properties cannot be saved!")
+            if not data_type.HasColumn(prop) or data_type.GetColumn(prop).Virtual:
+                raise ValueError("Custom or unknown properties cannot be saved! -> '%s'" % (prop,))
         
         # no properties
         if not properties:
