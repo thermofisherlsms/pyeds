@@ -391,7 +391,7 @@ class EDS(object):
             offsets = offsets)
     
     
-    def Update(self, items, properties, save=True):
+    def Update(self, items, properties=None, save=True):
         """
         Updates specified properties of given items.
         
@@ -406,16 +406,26 @@ class EDS(object):
                 Items to update.
             
             properties: (str,)
-                Names of properties to update.
+                Names of properties to update. If set to None, all modified
+                properties will be updated even if modified just for a single
+                item.
             
             save: bool
-                If set to True, database changes are commit. Otherwise all the
+                If set to True, database changes are commit. Otherwise, all the
                 changes are lost when current connection closes.
         """
         
         # check items
-        if not items or not properties:
+        if not items:
             return
+        
+        # get dirty properties
+        if properties is None:
+            properties = set()
+            for item in items:
+                for prop in item.GetProperties():
+                    if prop.Dirty():
+                        properties.add(prop.Type.ColumnName)
         
         # get data type
         data_type = items[0].Type

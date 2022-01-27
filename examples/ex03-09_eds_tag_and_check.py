@@ -32,4 +32,4 @@ with pyeds.EDS("data.cdResult") as eds:
     eds.Report.Backup()
     
     # update item in result database
-    eds.Update([item], ["Checked", "Tags"])
+    eds.Update([item])
