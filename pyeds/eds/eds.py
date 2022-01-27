@@ -714,6 +714,12 @@ class EDS(object):
         # execute query
         self._report.ExecuteMany(sql, values)
         
+        # remove dirty flag
+        for item in items:
+            for prop in item.GetProperties():
+                if prop.Type.ColumnName in columns:
+                    prop.Dirty(False)
+        
         # log change
         columns = [data_type.GetColumn(c) for c in columns]
         self._update_last_change("DataTypesColumns", columns)
