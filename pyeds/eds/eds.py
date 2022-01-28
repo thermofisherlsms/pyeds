@@ -366,6 +366,22 @@ class EDS(object):
                 Items iterator.
         """
         
+        # apply params to first item if not specified
+        if not isinstance(queries, dict):
+            queries = {path[0]: queries}
+        if not isinstance(properties, dict):
+            properties = {path[0]: properties}
+        if not isinstance(excludes, dict):
+            excludes = {path[0]: excludes}
+        if not isinstance(orders, dict):
+            orders = {path[0]: orders}
+        if not isinstance(descs, dict):
+            descs = {path[0]: descs}
+        if not isinstance(limits, dict):
+            limits = {path[0]: limits}
+        if not isinstance(offsets, dict):
+            offsets = {path[0]: offsets}
+        
         # check args
         path = self._replace_entity_names(path)
         keep = self._replace_entity_names(keep) or path
