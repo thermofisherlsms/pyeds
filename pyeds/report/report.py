@@ -278,6 +278,29 @@ class Report(object):
         return self._db.execute(sql, values)
     
     
+    def ExecuteMany(self, sql, values=()):
+        """
+        Executes given SQL query and returns new cursor.
+        
+        Args:
+            sql: str
+                SQL query.
+            
+            values: ((?,),)
+                Values to be used within SQL query.
+        
+        Return:
+            sqlite.Cursor
+                Cursor pointing to query results.
+        """
+        
+        # assert connection
+        self._assert_connection()
+        
+        # execute sql query
+        return self._db.executemany(sql, values)
+    
+    
     def Backup(self):
         """Creates database backup."""
         
@@ -289,6 +312,16 @@ class Report(object):
         
         # duplicate file
         shutil.copy(self._db.path, filename)
+    
+    
+    def Save(self):
+        """Commits current changes."""
+        
+        # assert connection
+        self._assert_connection()
+        
+        # commit changes
+        self._db.commit()
     
     
     def _initialize(self):

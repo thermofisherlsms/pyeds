@@ -45,6 +45,7 @@ class PropertyValue(Lockable):
         self._type = property_type
         self._raw_value = value
         self._value = self._convert_value(value)
+        self._dirty = False
     
     
     def __str__(self):
@@ -117,6 +118,71 @@ class PropertyValue(Lockable):
         return self._raw_value
     
     
+    def SetValue(self, value):
+        """
+        Sets given value to property.
+        
+        Note that the property must be unlocked first.
+        
+        Args:
+            value: ?
+                Value to set.
+        """
+        
+        # convert naive value
+        value = self._create_value(value)
+        
+        # skip if same
+        if value == self._value:
+            return
+        
+        # convert to raw value
+        raw_value = self._revert_value(value)
+        
+        # check null
+        if raw_value is None and not self._type.Nullable:
+            message = "'%s' is not nullable!" % (self._type.ColumnName,)
+            raise ValueError(message)
+        
+        # set values
+        self._value = value
+        self._raw_value = raw_value
+        
+        # mark as dirty
+        self._dirty = True
+    
+    
+    def Dirty(self, value=None):
+        """
+        Gets or sets property dirty flag.
+        
+        Args:
+            value: bool or None
+                If set to True or False, the value is set.
+        
+        Returns:
+            bool:
+                Current flag state.
+        """
+        
+        # set value
+        if value is not None:
+            
+            # unlock if needed
+            locked = self.Locked()
+            if locked:
+                self.Unlock()
+            
+            # set value
+            self._dirty = bool(value)
+            
+            # lock if needed
+            if locked:
+                self.Lock()
+        
+        return self._dirty
+    
+    
     def _convert_value(self, value):
         """Converts raw value to final type."""
         
@@ -131,5 +197,41 @@ class PropertyValue(Lockable):
         # apply specific converter (e.g. traces, spectra)
         if self._type.ValueTypeConverter is not None:
             value = self._type.ValueTypeConverter.Convert(value)
+        
+        return value
+    
+    
+    def _revert_value(self, value):
+        """Reverts final value to raw type."""
+        
+        # apply specific converter (e.g. traces, spectra)
+        if self._type.ValueTypeConverter is not None:
+            value = self._type.ValueTypeConverter.Revert(value)
+        
+        # convert value from special value type (e.g. enum, ddmap)
+        if self._type.SpecialValueType is not None:
+            value = self._type.SpecialValueType.Revert(value)
+        
+        # convert value from custom data type (e.g. string, int, binary)
+        if self._type.CustomDataType is not None:
+            value = self._type.CustomDataType.Revert(value)
+        
+        return value
+    
+    
+    def _create_value(self, value):
+        """Creates final value from naive data."""
+        
+        # apply specific converter (e.g. traces, spectra)
+        if self._type.ValueTypeConverter is not None:
+            return self._type.ValueTypeConverter.Create(value)
+        
+        # convert value to special value type (e.g. enum, ddmap)
+        if self._type.SpecialValueType is not None:
+            return self._type.SpecialValueType.Create(value)
+        
+        # convert value to custom data type (e.g. string, int, binary)
+        if self._type.CustomDataType is not None:
+            return self._type.CustomDataType.Create(value)
         
         return value

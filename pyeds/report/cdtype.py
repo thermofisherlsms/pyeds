@@ -92,6 +92,96 @@ class CustomDataType(Lockable):
         raise TypeError(message)
     
     
+    def Revert(self, value):
+        """
+        Reverts current type value back to original database value.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: ?
+                Current type value to be converted.
+            
+        Returns:
+            ?
+                Value converted into original database type.
+        """
+        
+        if value is None:
+            return None
+        
+        if self.Name == 'Int':
+            return int(value)
+        
+        if self.Name == 'Int64':
+            return int(value)
+        
+        if self.Name == 'Double':
+            return float(value)
+        
+        if self.Name == 'String':
+            return str(value)
+        
+        if self.Name == 'Boolean':
+            return int(value)
+        
+        if self.Name == 'Binary':
+            return value.Value
+        
+        if self.Name == 'Object':
+            return value
+        
+        message = "'%s' is not known custom data type!" % self.Name
+        raise TypeError(message)
+    
+    
+    def Create(self, value):
+        """
+        Creates current type value from naive data.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: ?
+                Naive value to be converted.
+            
+        Returns:
+            ?
+                Value converted into current type.
+        """
+        
+        if value is None:
+            return None
+        
+        if self.Name == 'Int':
+            return int(value)
+        
+        if self.Name == 'Int64':
+            return int(value)
+        
+        if self.Name == 'Double':
+            return float(value)
+        
+        if self.Name == 'String':
+            return str(value)
+        
+        if self.Name == 'Boolean':
+            return bool(value)
+        
+        if self.Name == 'Binary':
+            if not isinstance(value, Binary):
+                return Binary(value)
+            return value
+        
+        if self.Name == 'Object':
+            return value
+        
+        message = "'%s' is not known custom data type!" % self.Name
+        raise TypeError(message)
+    
+    
     @staticmethod
     def FromDBData(data):
         """

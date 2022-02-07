@@ -49,3 +49,35 @@ class ValueConverter(object):
         """
         
         raise NotImplementedError()
+    
+    
+    def Revert(self, value):
+        """
+        Reverts final property value back to its original database type.
+        
+        Args:
+            value: ?
+                Final property value to convert.
+        
+        Returns:
+            ?
+                Value converted into original database type.
+        """
+        
+        raise NotImplementedError()
+    
+    
+    def Create(self, value):
+        """
+        Creates final property value from naive data.
+        
+        Args:
+            value: ?
+                Naive value to be converted.
+        
+        Returns:
+            ?
+                Final property value.
+        """
+        
+        raise NotImplementedError()

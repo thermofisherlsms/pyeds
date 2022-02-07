@@ -158,20 +158,92 @@ class EnumDataType(Lockable):
     
     def Convert(self, value):
         """
-        Parses raw DB value into enum element.
+        Converts original database value to enum value.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
         
         Args:
             value: int
-                Raw value as stored in DB.
+                Original database value to be converted.
         
         Returns:
-            pyeds.EnumValue
-                Parsed value.
+            pyeds.EnumValue or None
+                Parsed enum value.
         """
         
         # check value
         if value is None:
             return None
+        
+        # create value
+        val = EnumValue(self, value)
+        val.Lock()
+        
+        return val
+    
+    
+    def Revert(self, value):
+        """
+        Reverts enum value back to raw DB value.
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: pyeds.EnumValue
+                Enum value to be converted.
+        
+        Returns:
+            int
+                Value converted into original database type.
+        """
+        
+        # check value
+        if value is None:
+            return None
+        
+        # check type
+        if not isinstance(value, EnumValue):
+            message = "Value must be of type pyeds.EnumValue! -> %s" % (type(value))
+            raise TypeError(message)
+        
+        return value.Value
+    
+    
+    def Create(self, value):
+        """
+        Creates enum value from naive data:
+        
+        This method is not intended to be used by user. It is used automatically
+        by the library itself.
+        
+        Args:
+            value: pyeds.EnumValue or int
+                Naive value to be converted.
+        
+        Returns:
+            pyeds.EnumValue or None
+                Parsed enum value.
+        """
+        
+        # check value
+        if value is None:
+            return None
+        
+        # get value from enum
+        if isinstance(value, EnumValue):
+            value = value.Value
+        
+        # check type
+        if not isinstance(value, int):
+            message = "Value must be of type pyeds.EnumValue or int! -> %s" % (type(value),)
+            raise TypeError(message)
+        
+        # check value
+        if value and not self.GetElements(value):
+            message = "Value out of enum range! -> %s" % (value,)
+            raise ValueError(message)
         
         # create value
         val = EnumValue(self, value)

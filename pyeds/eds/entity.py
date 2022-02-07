@@ -245,6 +245,27 @@ class EntityItem(Lockable):
         return tuple(props)
     
     
+    def SetValue(self, prop_name, value):
+        """
+        Sets given value to specified property.
+        
+        Args:
+            prop_name: str
+                Property name.
+            
+            value: ?
+                Value to set.
+        """
+        
+        # get property
+        prop = self.GetProperty(prop_name)
+        
+        # set value to property
+        prop.Unlock()
+        prop.SetValue(value)
+        prop.Lock()
+    
+    
     def SetProperties(self, props):
         """
         Sets property values from given data.
@@ -346,7 +367,7 @@ class EntityItem(Lockable):
             position = 1 + max((0, *(p.Type.VisiblePosition for p in self._properties)))
         
         # init column definition
-        column = PropertyColumn()
+        column = PropertyColumn(virtual=True)
         column.ColumnName = name
         column.DisplayName = name
         column.FormatString = template
@@ -362,3 +383,63 @@ class EntityItem(Lockable):
         # add property
         self._properties.append(prop)
         self._names[name] = len(self._properties) - 1
+    
+    
+    def Check(self, value=True):
+        """
+        Sets current checked state according to given value.
+        
+        Note that the updated value is not persisted automatically in the
+        database. This must be done manually by 'pyeds.EDS.Update' method.
+        
+        Args:
+            value: bool
+                Checked state to set.
+        """
+        
+        # check if checkable
+        if 'Checked' not in self._names:
+            message = "'%s' is not checkable!" % (self._type.Name,)
+            raise ValueError(message)
+        
+        # update property
+        self.SetValue('Checked', bool(value))
+    
+    
+    def Tag(self, index, value=True):
+        """
+        Sets specified tag state according to given value.
+        
+        Note that if an invisible tag is set, it does not make it visible. This
+        must be done manually in the main application.
+        
+        Note that the updated value is not persisted automatically in the
+        database. This must be done manually by 'pyeds.EDS.Update' method.
+        
+        Args:
+            index: int
+                Index of the tag to set.
+            
+            value: bool
+                Tag state to set.
+        """
+        
+        # check if taggable
+        if 'Tags' not in self._names:
+            message = "'%s' is not taggable!" % (self._type.Name,)
+            raise ValueError(message)
+        
+        # get property
+        prop = self.GetProperty('Tags')
+        
+        # get or init tags
+        if prop.Value is None:
+            tags = [None] * len(prop.Type.SpecialValueType.Boxes)
+        else:
+            tags = list(prop.Value.Values)
+        
+        # update value
+        tags[index] = value or None
+        
+        # update property
+        self.SetValue('Tags', tags)
