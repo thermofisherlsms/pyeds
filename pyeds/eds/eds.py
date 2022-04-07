@@ -641,7 +641,7 @@ class EDS(object):
         """Reads connected items along the given path."""
         
         # get path
-        if parent is not None:
+        if parent is not None and parent.Type.Name == path[0]:
             path = path[1:]
         
         # get entity
