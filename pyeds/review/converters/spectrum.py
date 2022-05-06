@@ -51,6 +51,12 @@ class SpectrumImageConverter(ImageValueConverter):
         xy = [[(c.MZ, 0.), (c.MZ, c.Intensity)] for c in scan.Centroids]
         labels = [(c.MZ, c.Intensity, "%.4f" % c.MZ) for c in scan.Centroids]
         
+        # apply zoom
+        if zoom is not None:
+            idx1, idx2 = plotting.crop(xy, zoom[0], zoom[1], lambda d: d[0][0])
+            xy = xy[idx1:idx2]
+            labels = labels[idx1:idx2]
+        
         # get title
         if title is None:
             title = str(scan)

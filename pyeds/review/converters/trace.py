@@ -76,7 +76,8 @@ class TraceImageConverter(ImageValueConverter):
         # autoscale Y
         y_range = None
         if zoom:
-            points = [trace_y[i] for i in range(len(trace_y)) if zoom[0] <= trace_x[i] <= zoom[1]]
+            idx1, idx2 = plotting.crop(trace_x, zoom[0], zoom[1])
+            points = trace_y[idx1:idx2]
             if points:
                 y_range = (min(0, min(points)), max(0, max(points)))
         

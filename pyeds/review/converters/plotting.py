@@ -339,3 +339,97 @@ def overlaps(box1, box2):
         return False
     
     return True
+
+
+def bisect(sequence, value, key=None, side='left'):
+    """
+    Uses binary search to find index where if given value inserted, the order
+    of items is preserved. The collection of items is assumed to be sorted in
+    ascending order.
+    
+    Args:
+        sequence: list or tuple
+            Collection of items ordered by searched value.
+        
+        value: int or float
+            Value to be searched.
+        
+        key: callable or None
+            Function to be used to get specific value from item.
+        
+        side: str
+            If 'left' is used, index of the first suitable location is
+            returned. If 'right' is used, the last such index is returned.
+    
+    Returns:
+        int
+            Index of the exact or next higher item.
+    """
+    
+    has_key = key is not None
+    lo = 0
+    hi = len(sequence)
+    
+    if side == 'left':
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if value <= (key(sequence[mid]) if has_key else sequence[mid]):
+                hi = mid
+            else:
+                lo = mid + 1
+    
+    elif side == 'right':
+        while lo < hi:
+            mid = (lo + hi) // 2
+            if value < (key(sequence[mid]) if has_key else sequence[mid]):
+                hi = mid
+            else:
+                lo = mid + 1
+    
+    else:
+        message = "Unknown side specified! -> '%s'" % side
+        raise ValueError(message)
+    
+    return lo
+
+
+def crop(sequence, minimum, maximum, key=None, extend=False):
+    """
+    Calculates crop indices for given sequence and range. Optionally the range
+    can be extended by adding additional adjacent points to each side. Such
+    extension might be useful to display zoomed lines etc. Note that this method
+    assumes that given sequence is sorted ascendantly.
+    
+    Args:
+        sequence: list or tuple
+            Collection of items ordered by searched value.
+        
+        minimum: float
+            Crop range minimum.
+        
+        maximum: float
+            Crop range maximum.
+        
+        key: callable or None
+            Function to be used to get specific value from item.
+        
+        extend: bool
+            If set to True additional adjacent point is added to each side.
+    
+    Returns:
+        (int, int)
+            Cropping indexes.
+    """
+    
+    # get indices
+    left_idx = bisect(sequence, minimum, key, 'left')
+    right_idx = bisect(sequence, maximum, key, 'right')
+    
+    # extend range by adjacent values
+    if extend and left_idx > 0:
+        left_idx = bisect(sequence[:left_idx], sequence[left_idx-1], key, 'left')
+    
+    if extend and right_idx < len(sequence):
+        right_idx += bisect(sequence[right_idx:], sequence[right_idx], key, 'right')
+    
+    return left_idx, right_idx
