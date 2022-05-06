@@ -70,9 +70,9 @@ class SpectrumImageConverter(ImageValueConverter):
         
         # plot data
         plotting.lines(plot, xy, label=title, linewidth=1, color="#1f77b4")
-        plotting.labels(plot, labels)
         plotting.zoom(plot, x_range=zoom)
         plotting.margins(plot)
+        plotting.labels(plot, labels)
         plotting.legend(plot, bool(title), fontsize=8)
         
         # make SVG image

@@ -3,6 +3,7 @@
 # import modules
 from io import StringIO
 import matplotlib.pyplot as plt
+from matplotlib.artist import Artist
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.collections import LineCollection
 
@@ -215,7 +216,7 @@ def labels(plot, labels, size=7, offset=3, spacing=3, overlap=False):
         
         # check overlap
         if overlap is False and any(overlaps(bbox, b) for b in occ):
-            text.set_visible(False)
+            Artist.remove(text)
             continue
         
         # remember used space
