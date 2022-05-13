@@ -10,9 +10,9 @@ _GRAMMAR = Grammar(
     null = 'IS NULL | IS NOT NULL',
     
     column = '[A-Za-z0-9_]+',
-    name = '\" [A-Za-z0-9-_\.\s\[\]\+\-]+ \"',
+    name = '\" [A-Za-z0-9-_\.\s\[\]\+\-]+ \" | \' [A-Za-z0-9-_\.\s\[\]\+\-]+ \'',
     val = '[A-Za-z0-9-_\.%]+',
-    quote = '\' [A-Za-z0-9-_\.\s\[\]\+\-]* \'',
+    quote = '\' [A-Za-z0-9-_%\.\s\[\]\+\-]* \'',
     
     state = 'column op val | column op quote | column null | name op val | name op quote | name null',
     group = '\( expr \)',

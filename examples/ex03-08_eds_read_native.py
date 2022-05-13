@@ -8,13 +8,12 @@ with pyeds.EDS("data.cdResult") as eds:
     
     # Although it's not recommended, the display names can be used for
     # tables and properties instead of real database names. Note that uniqueness
-    # of display names isn't guarantied. If display name is used within a search
-    # query, double-quotes must be used.
+    # of display names isn't guarantied.
     
     print(eds.Count("Compounds"))
     
     items = list(eds.Read("Compounds",
-        query = '"RT [min]" > 3.8 AND "RT [min]" < 4.5',
+        query = "'RT [min]' > 3.8 AND 'RT [min]' < 4.5",
         properties = ["Calc. MW", "RT [min]", "Area (Max.)", "Formula"],
         order = "Area (Max.)",
         desc = True,
