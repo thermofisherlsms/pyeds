@@ -12,8 +12,8 @@ _GRAMMAR = Grammar(
     
     column = '[A-Za-z0-9_]+',
     name = '\" [A-Za-z0-9-_\.\s\[\]\+\-]+ \" | \' [A-Za-z0-9-_\.\s\[\]\+\-]+ \'',
-    val = '[A-Za-z0-9-_\.%]+',
-    quote = '\' [A-Za-z0-9-_%\.\s\[\]\+\-]* \'',
+    val = '[A-Za-z0-9-_%\.]+',
+    quote = '\" [A-Za-z0-9-_%\.\s\[\]\+\-]* \" | \' [A-Za-z0-9-_%\.\s\[\]\+\-]* \'',
     
     seq = 'val , seq | quote , seq | val , val | val , quote | val , | val | quote , val | quote , quote | quote , | quote',
     inside = 'IN \( seq \) | NOT IN \( seq \)',
