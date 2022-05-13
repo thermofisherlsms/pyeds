@@ -5,6 +5,7 @@ from .grammar import Grammar
 
 # create basic query grammar
 _GRAMMAR = Grammar(
+    
     log = 'AND | OR',
     op = '<= | >= | != | = | < | > | LIKE',
     null = 'IS NULL | IS NOT NULL',
@@ -14,7 +15,10 @@ _GRAMMAR = Grammar(
     val = '[A-Za-z0-9-_\.%]+',
     quote = '\' [A-Za-z0-9-_%\.\s\[\]\+\-]* \'',
     
-    state = 'column op val | column op quote | column null | name op val | name op quote | name null',
+    seq = 'val , seq | quote , seq | val , val | val , quote | val , | val | quote , val | quote , quote | quote , | quote',
+    inside = 'IN \( seq \) | NOT IN \( seq \)',
+    
+    state = 'column op val | column op quote | column inside | column null | name op val | name op quote | name inside | name null',
     group = '\( expr \)',
     
     expr = 'group log expr | state log expr | group | state',
@@ -103,7 +107,7 @@ class Query(object):
         
         Returns:
             hierarchical list
-                List of rule values.
+                Rule values.
         """
         
         values = []
@@ -113,7 +117,7 @@ class Query(object):
             return values
         
         # search tree
-        return Grammar.extract(self._tree, rule) 
+        return Grammar.extract(self._tree, rule)
     
     
     def _to_str(self, tree):
@@ -239,6 +243,18 @@ class EDSQuery(Query):
         if self._names is not None:
             column = self._names[column]
         
+        # IN sequence
+        if item[2][0] == 'inside':
+            
+            if item[2][1] == 'NOT':
+                values = self._parse_seq(item[2][4])
+                sql = '"%s" NOT IN (%s)' % (column, ", ".join("?"*len(values)))
+            else:
+                values = self._parse_seq(item[2][3])
+                sql = '"%s" IN (%s)' % (column, ", ".join("?"*len(values)))
+            
+            return [sql], values
+        
         # NULL comparison
         if item[2][0] == 'null':
             sql = '"%s" %s' % (column, " ".join(item[2][1:]))
@@ -255,3 +271,35 @@ class EDSQuery(Query):
             value = item[3][2]
         
         return [sql], [value]
+    
+    
+    def _parse_seq(self, item):
+        """Parses sequence of values."""
+        
+        values = []
+        
+        # get 1st value
+        if item[1][0] == 'val':
+            values.append(item[1][1])
+        
+        elif item[1][0] == 'quote':
+            values.append(item[1][2])
+        
+        elif item[1][0] == 'seq':
+            values += self._parse_seq(item[1])
+        
+        # check other values
+        if len(item) != 4:
+            return values
+        
+        # get other values
+        if item[3][0] == 'val':
+            values.append(item[3][1])
+        
+        elif item[3][0] == 'quote':
+            values.append(item[3][2])
+        
+        elif item[3][0] == 'seq':
+            values += self._parse_seq(item[3])
+        
+        return values

@@ -20,4 +20,5 @@ with pyeds.EDS("data.cdResult") as eds:
 # grouping by '()' and following operators
 #     'AND | OR'
 #     'IS NULL | IS NOT NULL'
+#     'IN () | NOT IN ()'
 #     '<= | >= | != | = | < | > | LIKE'.

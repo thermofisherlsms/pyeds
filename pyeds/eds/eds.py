@@ -21,6 +21,7 @@ class EDS(object):
     grouping by '()' and following operators
         'AND | OR'
         'IS NULL | IS NOT NULL'
+        'IN () | NOT IN ()'
         '<= | >= | != | = | < | > | LIKE'.
     
     Attributes:
@@ -323,7 +324,7 @@ class EDS(object):
         
         The parameters of this method are logically the same as for the standard
         reading. However, to be able to specify them independently for data
-        types along given path, they needs to be provides as dictionaries, where
+        types along given path, they must be provided as dictionaries, where
         the key is the data type name.
         
         Args:
