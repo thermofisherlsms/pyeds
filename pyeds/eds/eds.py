@@ -84,10 +84,10 @@ class EDS(object):
     
     def GetPath(self, from_entity, to_entity, via=()):
         """
-        Gets shortest connection path between two data types. Please note that
-        if there are multiple paths available with the same length it is rather
-        undefined, which one is taken. Be sure to use 'via' to get requested
-        path.
+        Gets the shortest connection path between two data types. Please note
+        that if there are multiple paths available with the same length it is
+        rather undefined, which one is taken. Be sure to use 'via' to get
+        requested path.
         
         Args:
             from_entity: str
@@ -408,6 +408,38 @@ class EDS(object):
             offsets = offsets)
     
     
+    def ReadMany(self, entity, ids, properties=None, exclude=None):
+        """
+        Reads items of specified data type for given IDs.
+        
+        Args:
+            entity: str
+                Data type name.
+            
+            ids: ((int,),)
+                Items IDs.
+            
+            properties: (str,) or None
+                Names of properties to read. Note that ID properties are always
+                retrieved. If set to None, all available properties are
+                retrieved.
+            
+            exclude: (str,) or None
+                Names of properties to ignore.
+        
+        Yields:
+            iter(pyeds.EntityItem,)
+                Items iterator.
+        """
+        
+        # read items
+        return self._read_many(
+            entity = entity,
+            ids = ids,
+            columns = properties,
+            exclude = exclude)
+    
+    
     def Update(self, items, properties=None, save=True):
         """
         Updates specified properties of given items.
@@ -518,28 +550,28 @@ class EDS(object):
                 yield [data_type1] + path
     
     
-    def _replace_entity_names(self, input):
+    def _replace_entity_names(self, original):
         """Replaces entity names to make sure real names are used."""
         
         # check item
-        if input is None:
+        if original is None:
             return None
         
         # replace dictionary keys
-        if isinstance(input, dict):
-            output = {}
-            for key, value in input.items():
+        if isinstance(original, dict):
+            converted = {}
+            for key, value in original.items():
                 entity = self._report.GetDataType(key)
-                output[entity.Name] = value
+                converted[entity.Name] = value
         
         # replace lists
         else:
-            output = []
-            for key in input:
+            converted = []
+            for key in original:
                 entity = self._report.GetDataType(key)
-                output.append(entity.Name)
+                converted.append(entity.Name)
         
-        return output
+        return converted
     
     
     def _get_column_names(self, *sources):
@@ -611,17 +643,17 @@ class EDS(object):
         values = []
         
         # add link IDs
-        ids = []
+        buff = []
         for column in data_type.IDColumns:
-            ids.append('"%s%s" = %s' % (data_type.TableName, column.ColumnName, column.ColumnName))
-        sql += ' INNER JOIN "%s" ON %s' % (connection.TableName, ' AND '.join(ids))
+            buff.append('"%s%s" = %s' % (data_type.TableName, column.ColumnName, column.ColumnName))
+        sql += ' INNER JOIN "%s" ON %s' % (connection.TableName, ' AND '.join(buff))
         
         # add parent IDs
-        ids = []
+        buff = []
         for column in parent.Type.IDColumns:
-            ids.append('"%s%s" = ?' % (parent.Type.TableName, column.ColumnName))
+            buff.append('"%s%s" = ?' % (parent.Type.TableName, column.ColumnName))
             values.append(parent.GetValue(column.ColumnName))
-        sql += ' WHERE (%s)' % (' AND '.join(ids))
+        sql += ' WHERE (%s)' % (' AND '.join(buff))
         
         # finalize query
         sql, values = self._sql_finalize_select(sql, values, names, query, order, desc, limit, offset)
@@ -717,6 +749,38 @@ class EDS(object):
             else:
                 for child in children:
                     yield child
+    
+    
+    def _read_many(self, entity, ids, columns=None, exclude=None):
+        """Reads items of given data type name for specified IDs."""
+        
+        # get data type
+        data_type = self._report.GetDataType(entity)
+        
+        # get column names
+        names, ambiguous = self._get_column_names(data_type)
+        
+        # init query
+        sql = self._sql_initialize_select(data_type, columns, exclude, names)
+        
+        # add IDs
+        buff = []
+        for column in data_type.IDColumns:
+            buff.append('"%s" = ?' % column.ColumnName)
+        sql += ' WHERE (%s)' % (' AND '.join(buff))
+        
+        # read items
+        for values in ids:
+            
+            # execute query
+            results = self._report.Execute(sql, values)
+            
+            # yield items
+            for item_data in results:
+                item = EntityItem(data_type)
+                item.SetProperties(self._create_properties(data_type.Columns, exclude, **item_data))
+                item.Lock()
+                yield item
     
     
     def _update_items(self, items, columns):
