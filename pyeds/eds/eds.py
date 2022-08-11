@@ -325,7 +325,8 @@ class EDS(object):
         The parameters of this method are logically the same as for the standard
         reading. However, to be able to specify them independently for data
         types along given path, they must be provided as dictionaries, where
-        the key is the data type name.
+        the key is the data type name. If not, they will be applied just to
+        the first data type in the path.
         
         Args:
             path: (str,)
