@@ -443,3 +443,32 @@ class EntityItem(Lockable):
         
         # update property
         self.SetValue('Tags', tags)
+    
+    
+    def Tagged(self, index):
+        """
+        Gets specified tag state.
+        
+        Args:
+            index: int
+                Index of the tag to get.
+        
+        Returns:
+            bool
+                Returns True if specified tag is set to True, False otherwise.
+        """
+        
+        # check if taggable
+        if 'Tags' not in self._names:
+            message = "'%s' is not taggable!" % (self._type.Name,)
+            raise ValueError(message)
+        
+        # get property
+        prop = self.GetProperty('Tags')
+        
+        # no tags set
+        if prop.Value is None:
+            return False
+        
+        # get specified tag
+        return prop.Value.Values[index] is True
