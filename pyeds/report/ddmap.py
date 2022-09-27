@@ -667,6 +667,27 @@ class DataDistributionValue(Lockable):
         return self._values.__iter__()
     
     
+    def __eq__(self, other):
+        """Equal operator."""
+        
+        if self is other:
+            return True
+        
+        if isinstance(other, DataDistributionValue):
+            return self.Values == other.Values
+        
+        if isinstance(other, (list, tuple)):
+            return self.Values == other
+        
+        return False
+    
+    
+    def __ne__(self, other):
+        """Not equal operator."""
+        
+        return not self.__eq__(other)
+    
+    
     @property
     def Type(self):
         """
