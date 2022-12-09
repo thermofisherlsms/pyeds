@@ -462,3 +462,46 @@ class TemplateConverter(StringValueConverter):
             return prop.Type.FormatString.format(prop.Value)
         
         return escape(str(prop.Value))
+
+
+@register("ECF3E1A3-0A57-458E-8C9C-83B5B1476242")
+@register("4B86C2D4-15AC-4E04-93A4-E05E35F72363")
+class FileIDConverter(StringValueConverter):
+    """Provides real file name as a tooltip for various file IDs."""
+    
+    
+    def Convert(self, prop, **kwargs):
+        """
+        Converts value into value with file name tooltip.
+        
+        Args:
+            prop: pyeds.PropertyValue
+                Property to convert.
+        
+        Returns:
+            str
+                Formatted value.
+        """
+        
+        # check value
+        if prop.Value is None:
+            return ""
+        
+        # init file names
+        if '_names' not in locals():
+            
+            # init lookup
+            self._names = {}
+            
+            # set names
+            if self.EDS is not None:
+                with self.EDS:
+                    for item in self.EDS.Read("WorkflowInputFile"):
+                        self._names[item.FileID] = item.FileName
+                        self._names[item.StudyFileID] = item.FileName
+        
+        # get tooltip
+        tooltip = self._names.get(prop.Value, "")
+        
+        # make HTML
+        return "<div title=\"%s\" >%s</div>" % (tooltip, prop.Value)
