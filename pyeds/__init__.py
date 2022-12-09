@@ -1,7 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # set version
-version = (2, 6, 0)
+version = (3, 0, 0)
 
 # import main tools
 from .report import Report

@@ -1,5 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
+from ...eds import EDS
+
 # init main repository
 CONVERTERS = {}
 
@@ -32,10 +34,40 @@ class ValueConverter(object):
     and registering it by 'pyeds.review.register' decorator using appropriate
     GridCellControlGuid, DataPurpose, SpecialValueTypeName, DataType.Name or
     CustomDataType.Name.
+    
+    Attributes:
+        
+        EDS: pyeds.EDS
+            Instance of EDS.
     """
-
+    
     CELL_CLASS = None
     CELL_STYLE = None
+    
+    
+    def __init__(self, eds=None):
+        """
+        Initializes a new instance of ValueConverter.
+        
+        Args:
+            eds: pyeds.EDS or None
+                Instance of EDS.
+        """
+        
+        self._eds = eds
+    
+    
+    @property
+    def EDS(self):
+        """
+        Gets instance if EDS.
+        
+        Returns:
+            pyeds.EDS or None
+                Instance of EDS or None if not provided.
+        """
+        
+        return self._eds
     
     
     def Convert(self, prop, **kwargs):

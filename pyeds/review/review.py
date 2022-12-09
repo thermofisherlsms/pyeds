@@ -7,6 +7,7 @@ import uuid
 import webbrowser
 from xml.sax.saxutils import escape
 from .helpers import *
+from ..eds import EDS
 from .converters import CONVERTERS, ImageValueConverter
 
 
@@ -27,11 +28,14 @@ class Review(object):
     """
     
     
-    def __init__(self, title="Review", folder="review_data", clear=True):
+    def __init__(self, eds, title="Review", folder="review_data", clear=True):
         """
         Initializes a new instance of Review.
         
         Args:
+            eds: pyeds.EDS
+                Instance of EDS.
+            
             title: str or None
                 Review title.
             
@@ -52,6 +56,11 @@ class Review(object):
         self._table_name = None
         self._ddmap_sizes = set()
         self._converters = {}
+        self._eds = eds
+        
+        # check EDS
+        if not isinstance(self._eds, EDS):
+            raise TypeError("EDS must be of type pyeds.EDS!")
     
     
     def __enter__(self):
@@ -518,8 +527,7 @@ class Review(object):
         # initialize value converters
         self._converters = {}
         for guid in CONVERTERS:
-            converter = CONVERTERS[guid]()
-            self._converters[guid] = converter
+            self._converters[guid] = CONVERTERS[guid](self._eds)
     
     
     def _finalize(self):
