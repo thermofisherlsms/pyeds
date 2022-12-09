@@ -93,7 +93,7 @@ import pyeds
 
 # init tools
 eds = pyeds.EDS("examples/data.cdResult")
-review = pyeds.Review()
+review = pyeds.Review(eds)
 
 # open result file and review using the 'with' statement
 with eds, review:
