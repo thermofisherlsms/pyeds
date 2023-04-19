@@ -17,8 +17,9 @@ class EDS(object):
     
     Please note that the 'query' provided for filtered reading is not a real SQL
     statement but rather its simplified version. It is now limited just to use
-    the column names, values defined by '[A-Za-z0-9-_\.%]+', single quotes,
-    grouping by '()' and following operators
+    the column names, simple values defined by '[A-Za-z0-9-_\.%]+', quotes for
+    more complicated values and column names, grouping by '()' and following
+    operators:
         'AND | OR'
         'IS NULL | IS NOT NULL'
         'IN () | NOT IN ()'
@@ -897,20 +898,18 @@ class EDS(object):
             else:
                 sql += ' AND (%s)' % qsql
         
-        # add sorting
-        if order:
+        # add sorting if not in query
+        if order and "ORDER BY " not in sql:
             sql += ' ORDER BY "%s"' % names[order]
+            if desc:
+                sql += ' DESC'
         
-        # add direction
-        if desc:
-            sql += ' DESC'
-        
-        # add limit
-        if limit:
+        # add limit if not in query
+        if limit and "LIMIT " not in sql:
             sql += ' LIMIT %d' % limit
         
-        # add offset
-        if offset:
+        # add offset if not in query
+        if offset and "OFFSET " not in sql:
             sql += ' OFFSET %d' % offset
         
         return sql, values
