@@ -218,6 +218,12 @@ class EDSQuery(Query):
         if self._names is not None:
             column = self._names[column]
         
+        # escape column name
+        if "[" not in column and "]" not in column:
+            column = "[%s]" % column
+        else:
+            column = '"%s"' % column
+        
         return column
     
     
