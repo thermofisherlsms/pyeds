@@ -2,10 +2,6 @@
 
 from setuptools import setup, find_packages
 
-# get version
-from pyeds import version
-version = '.'.join(str(x) for x in version)
-
 # include additional files
 package_data = {
     '': ['*.css', '*.js']}
@@ -21,7 +17,7 @@ classifiers = [
 # main setup
 setup(
     name = 'pyeds',
-    version = version,
+    version = '4.0.0',
     description = 'Provides easy access to Thermo Discoverer platform results.',
     url = 'https://github.com/thermofisherlsms/pyeds',
     author = 'Martin Strohalm, Thermo Fisher Scientific',
