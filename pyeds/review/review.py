@@ -28,13 +28,14 @@ class Review(object):
     """
     
     
-    def __init__(self, eds, title="Review", folder="review_data", clear=True):
+    def __init__(self, eds=None, title="Review", folder="review_data", clear=True):
         """
         Initializes a new instance of Review.
         
         Args:
-            eds: pyeds.EDS
-                Instance of EDS.
+            eds: pyeds.EDS or None
+                Instance of EDS. If not provided, some converters may not work
+                as expected.
             
             title: str or None
                 Review title.
@@ -59,7 +60,7 @@ class Review(object):
         self._eds = eds
         
         # check EDS
-        if not isinstance(self._eds, EDS):
+        if self._eds is not None and not isinstance(self._eds, EDS):
             raise TypeError("EDS must be of type pyeds.EDS!")
     
     
