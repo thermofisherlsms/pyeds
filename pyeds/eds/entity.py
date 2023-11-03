@@ -66,6 +66,9 @@ class EntityItem(Lockable):
                 Requested property value.
         """
         
+        if attr.startswith('_'):
+            super().__getattribute__(attr)
+        
         return self.GetValue(attr, silent=False)
     
     

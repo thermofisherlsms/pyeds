@@ -22,6 +22,9 @@ class Lockable(object):
         if name == '_locked' or not getattr(self, '_locked', False):
             super().__setattr__(name, value)
         
+        elif name.startswith('_'):
+            super().__setattr__(name, value)
+        
         else:
             message = "%s instance is read-only! Use Unlock() first or dedicated 'set' method, but be cautious!" % self.__class__.__name__
             raise AttributeError(message)
