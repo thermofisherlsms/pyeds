@@ -100,6 +100,19 @@ class Report(object):
     
     
     @property
+    def ViewPath(self):
+        """
+        Gets view file path.
+        
+        Returns:
+            str
+                View file path.
+        """
+        
+        return self._db.path + "View"
+    
+    
+    @property
     def Workflows(self):
         """
         Gets workflows stored in current file.

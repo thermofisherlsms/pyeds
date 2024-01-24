@@ -161,6 +161,19 @@ class PropertyColumn(Lockable):
         return self.IDColumnOrder > 0
     
     
+    @property
+    def IsInViewFile(self):
+        """
+        Gets the value indicating if this property is stored in view file.
+        
+        Returns:
+            bool
+                True if this is view file property, False otherwise.
+        """
+        
+        return self.ExtendedData.get('StorageFileOption_StorageFile', None) == 'View'
+    
+    
     @staticmethod
     def FromDBData(data):
         """
