@@ -227,12 +227,6 @@ class EDSQuery(Query):
                 raise KeyError("Unknown column in query! --> '%s" % column)
             column = name
         
-        # escape column name
-        if "[" not in column and "]" not in column:
-            column = "[%s]" % column
-        else:
-            column = '"%s"' % column
-        
         return column
     
     
