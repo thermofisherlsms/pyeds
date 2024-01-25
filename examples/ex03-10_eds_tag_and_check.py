@@ -17,11 +17,11 @@ with pyeds.EDS("data.cdResult") as eds:
     print("Tags:", item.Tags.Values if item.Tags else None)
     
     # check item
-    item.Check(True)
+    item.Check(not item.Checked)
     
     # turn on/off some tags
-    item.Tag(0, True)
-    item.Tag(4, False)
+    item.Tag(0, not item.Tags.Values[0] if item.Tags else True)
+    item.Tag(4, not item.Tags.Values[4] if item.Tags else False)
     
     # show new state
     print()
