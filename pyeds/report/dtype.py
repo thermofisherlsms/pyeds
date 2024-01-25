@@ -47,6 +47,8 @@ class DataType(Lockable):
             Available direct connections.
     """
     
+    T_ALIAS = "T1"
+    
     
     def __init__(self):
         """Initializes a new instance of DataType."""

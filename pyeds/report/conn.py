@@ -33,6 +33,8 @@ class DataTypeConnection(Lockable):
             Collection of available property columns.
     """
     
+    T_ALIAS = "C1"
+    
     
     def __init__(self):
         """Initializes a new instance of DataTypeConnection."""

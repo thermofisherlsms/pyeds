@@ -7,6 +7,9 @@ from .entity import EntityItem
 from .prop import PropertyValue
 from .query import EDSQuery
 
+# define constants
+_VIEWFILE = "_ViewFile"
+
 
 class EDS(object):
     """
@@ -43,6 +46,9 @@ class EDS(object):
         
         # init report file
         self._report = Report(report)
+        
+        # init view file counter
+        self._view_count = 0
     
     
     def __enter__(self):
@@ -157,7 +163,7 @@ class EDS(object):
         columns, names, ambiguous = self._get_columns(None, None, data_type)
         
         # init SQL
-        sql = 'SELECT COUNT(*) FROM "%s"' % data_type.TableName
+        sql = 'SELECT COUNT(*) FROM %s AS %s' % (data_type.TableName, data_type.T_ALIAS)
         values = []
         
         # finalize SQL
@@ -197,7 +203,7 @@ class EDS(object):
         columns, names, ambiguous = self._get_columns(None, None, connection)
         
         # init SQL
-        sql = 'SELECT COUNT(*) FROM "%s"' % connection.TableName
+        sql = 'SELECT COUNT(*) FROM %s AS %s' % (connection.TableName, connection.T_ALIAS)
         values = []
         
         # finalize SQL
@@ -571,8 +577,14 @@ class EDS(object):
         # get columns
         columns, names, ambiguous = self._get_columns(include, exclude, data_type)
         
+        # attach view file
+        needs_view = self._attach_view_file(columns)
+        
         # init SQL
-        sql, values = self._sql_initialize_select(columns, data_type)
+        sql, values = self._sql_initialize_select(columns, data_type, names)
+        
+        # add view file SQL
+        sql += self._sql_view_file_select(columns, data_type)
         
         # finalize SQL
         sql, values = self._sql_finalize_select(sql, values, query, names)
@@ -583,9 +595,13 @@ class EDS(object):
         # yield items
         for item_data in results:
             item = EntityItem(data_type)
-            item.SetProperties(self._create_properties(data_type.Columns, exclude, **item_data))
+            item.SetProperties(self._create_properties(columns, names, **item_data))
             item.Lock()
             yield item
+        
+        # detach view file
+        if needs_view:
+            self._detach_view_file()
     
     
     def _read_connected(self, entity, parent, query=None, include=None, exclude=None):
@@ -600,19 +616,25 @@ class EDS(object):
         # get columns
         columns, names, ambiguous = self._get_columns(include, exclude, data_type, connection)
         
+        # attach view file
+        needs_view = self._attach_view_file(columns)
+        
         # init SQL
-        sql, values = self._sql_initialize_select(columns, data_type)
+        sql, values = self._sql_initialize_select(columns, data_type, names)
         
         # add link IDs
         buff = []
         for column in data_type.IDColumns:
-            buff.append('"%s%s" = %s' % (data_type.TableName, column.ColumnName, column.ColumnName))
-        sql += ' INNER JOIN "%s" ON %s' % (connection.TableName, ' AND '.join(buff))
+            buff.append('%s%s = %s' % (data_type.TableName, column.ColumnName, names[column.ColumnName]))
+        sql += ' INNER JOIN %s %s ON %s' % (connection.TableName, connection.T_ALIAS, ' AND '.join(buff))
+        
+        # add view file SQL
+        sql += self._sql_view_file_select(columns, data_type)
         
         # add parent IDs
         buff = []
         for column in parent.Type.IDColumns:
-            buff.append('"%s%s" = ?' % (parent.Type.TableName, column.ColumnName))
+            buff.append('%s%s = ?' % (parent.Type.TableName, column.ColumnName))
             values.append(parent.GetValue(column.ColumnName))
         sql += ' WHERE (%s)' % (' AND '.join(buff))
         
@@ -625,10 +647,13 @@ class EDS(object):
         # yield items
         for item_data in results:
             item = EntityItem(data_type, connection)
-            item.SetProperties(self._create_properties(data_type.Columns, exclude, **item_data))
-            item.SetProperties(self._create_properties(connection.Columns, exclude, **item_data))
+            item.SetProperties(self._create_properties(columns, names, **item_data))
             item.Lock()
             yield item
+        
+        # detach view file
+        if needs_view:
+            self._detach_view_file()
     
     
     def _read_hierarchy(self, path, parent, keep=(), queries={}, includes={}, excludes={}):
@@ -705,13 +730,19 @@ class EDS(object):
         # get columns
         columns, names, ambiguous = self._get_columns(include, exclude, data_type)
         
+        # attach view file
+        needs_view = self._attach_view_file(columns)
+        
         # init query
-        sql, values = self._sql_initialize_select(columns, data_type)
+        sql, values = self._sql_initialize_select(columns, data_type, names)
+        
+        # add view file SQL
+        sql += self._sql_view_file_select(columns, data_type)
         
         # add IDs
         buff = []
         for column in data_type.IDColumns:
-            buff.append('"%s" = ?' % column.ColumnName)
+            buff.append('%s = ?' % names[column.ColumnName])
         sql += ' WHERE (%s)' % (' AND '.join(buff))
         
         # read items
@@ -723,9 +754,13 @@ class EDS(object):
             # yield items
             for item_data in results:
                 item = EntityItem(data_type)
-                item.SetProperties(self._create_properties(data_type.Columns, exclude, **item_data))
+                item.SetProperties(self._create_properties(columns, names, **item_data))
                 item.Lock()
                 yield item
+        
+        # detach view file
+        if needs_view:
+            self._detach_view_file()
     
     
     def _update_items(self, items, include):
@@ -742,15 +777,15 @@ class EDS(object):
         columns = list(set(columns).difference(id_columns))
         
         # finalize columns
-        cols = ('"%s" = ?' % c.ColumnName for c in columns)
+        cols = ('%s = ?' % names[c.ColumnName] for c in columns)
         cols = ", ".join(cols)
         
         # finalize IDs
-        ids = ('"%s" = ?' % c.ColumnName for c in id_columns)
+        ids = ('%s = ?' % names[c.ColumnName] for c in id_columns)
         ids = " AND ".join(ids)
         
         # make query
-        sql = 'UPDATE "%s" SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        sql = 'UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
         
         # get values
         values = []
@@ -784,7 +819,7 @@ class EDS(object):
             col.Lock()
         
         # make query
-        sql = 'UPDATE "%s" SET LastChange = ? WHERE ColumnId = ?' % (table_name, )
+        sql = 'UPDATE %s SET LastChange = ? WHERE ColumnId = ?' % (table_name, )
         
         # get values
         values = [(c.LastChange, c.ID) for c in columns]
@@ -822,29 +857,38 @@ class EDS(object):
     
     
     def _get_columns(self, include, exclude, *sources):
-        """Gets columns to be selected and all available column names.."""
+        """Gets columns to be selected and all available column names."""
         
         columns = []
         names = {}
         ambiguous = False
         
         include = set(include) if include else set()
-        exclude = set(include) if exclude else set()
+        exclude = set(exclude) if exclude else set()
         
         # use all sources
         for source in sources:
+            
+            # get alias
+            alias = source.T_ALIAS + "."
+            
+            # process names
             for column in source.Columns:
                 
                 # already exists
                 if column.ColumnName in names or column.DisplayName in names:
                     ambiguous = True
                 
+                # make prefixed name
+                prefix = "" if column.IsInViewFile else alias
+                name = '%s%s' % (prefix, column.ColumnName)
+                
                 # add to names by column name
-                names[column.ColumnName] = column.ColumnName
+                names[column.ColumnName] = name
                 
                 # add to names by display name
                 if column.DisplayName and column.DisplayName not in names:
-                    names[column.DisplayName] = column.ColumnName
+                    names[column.DisplayName] = name
                 
                 # check excluded
                 if column.ColumnName in exclude or column.DisplayName in exclude:
@@ -881,24 +925,46 @@ class EDS(object):
         return converted
     
     
-    def _sql_initialize_select(self, columns, data_type):
+    def _sql_initialize_select(self, columns, data_type, names):
         """Initializes selection SQL query from data type and requested columns."""
         
-        # get selected columns
-        cols = set(c.ColumnName for c in columns)
+        # get selected columns names
+        columns = set(names[c.ColumnName] for c in columns)
         
         # ensure ID columns are always present
         for column in data_type.IDColumns:
-            cols.add(column.ColumnName)
+            columns.add(names[column.ColumnName])
         
         # make identifiers
-        cols = ('"%s"' % c for c in cols)
-        cols = ", ".join(cols)
+        cols = ", ".join(columns)
         
         # make SQL
-        sql = 'SELECT %s FROM "%s"' % (cols, data_type.TableName)
+        sql = 'SELECT %s FROM %s AS %s' % (cols, data_type.TableName, data_type.T_ALIAS)
         
         return sql, []
+    
+    
+    def _sql_view_file_select(self, columns, data_type):
+        """Makes SQL to join view file tables and select columns."""
+        
+        # get view columns
+        columns = [c for c in columns if c.IsInViewFile]
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # add SQL for each table
+        sqls = []
+        idx = 0
+        
+        for column in columns:
+            idx += 1
+            ids = " AND ".join('%s.%s = V%d.%s' % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
+            sql = 'LEFT JOIN %s.%s_%s V%d ON %s' % (_VIEWFILE, data_type.TableName, column.ColumnName, idx, ids)
+            sqls.append(sql)
+        
+        # make SQL
+        return " " + " ".join(sqls)
     
     
     def _sql_finalize_select(self, sql, values, query, names):
@@ -938,16 +1004,67 @@ class EDS(object):
         return sql, values
     
     
-    def _create_properties(self, columns, exclude, **data):
+    def _attach_view_file(self, columns):
+        """Attaches the view file if needed."""
+        
+        # check if view file exists
+        if not self._report.HasViewFile():
+            return False
+        
+        # check if needed
+        if not any(c.IsInViewFile for c in columns):
+            return False
+        
+        # check counter
+        if self._view_count:
+            self._view_count += 1
+            return True
+        
+        # attach view file
+        sql = 'ATTACH "%s" AS %s' % (self._report.ViewFilePath, _VIEWFILE)
+        self._report.Execute(sql)
+        self._view_count += 1
+        
+        return True
+    
+    
+    def _detach_view_file(self):
+        """Detaches the view file."""
+        
+        # check counter
+        if self._view_count <= 0:
+            self._view_count = 0
+            return
+        
+        # decrease counter
+        self._view_count -= 1
+        
+        # detach view file
+        if self._view_count == 0:
+            sql = 'DETACH %s' % _VIEWFILE
+            self._report.Execute(sql)
+    
+    
+    def _create_properties(self, columns, names, **data):
         """Creates property items from DB data."""
         
         items = []
-        exclude = exclude or []
         
+        # create properties
         for column in columns:
-            if column.ColumnName in data and column.ColumnName not in exclude and column.DisplayName not in exclude:
-                prop = PropertyValue(column, data[column.ColumnName])
-                prop.Lock()
-                items.append(prop)
+            
+            # get name
+            name = names[column.ColumnName]
+            if name not in data:
+                name = column.ColumnName
+            
+            # check if available
+            if name not in data:
+                continue
+            
+            # create property
+            prop = PropertyValue(column, data[name])
+            prop.Lock()
+            items.append(prop)
         
         return items
