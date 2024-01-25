@@ -153,8 +153,8 @@ class EDS(object):
         # get data type
         data_type = self._report.GetDataType(entity)
         
-        # get column names
-        names, ambiguous = self._get_column_names(data_type)
+        # get columns
+        columns, names, ambiguous = self._get_columns(None, None, data_type)
         
         # init SQL
         sql = 'SELECT COUNT(*) FROM "%s"' % data_type.TableName
@@ -193,8 +193,8 @@ class EDS(object):
         data_type1 = self._report.GetDataType(entity1)
         connection = data_type1.GetConnection(entity2)
         
-        # get column names
-        names, ambiguous = self._get_column_names(connection)
+        # get columns
+        columns, names, ambiguous = self._get_columns(None, None, connection)
         
         # init SQL
         sql = 'SELECT COUNT(*) FROM "%s"' % connection.TableName
@@ -568,12 +568,11 @@ class EDS(object):
         # get data type
         data_type = self._report.GetDataType(entity)
         
-        # get column names
-        names, ambiguous = self._get_column_names(data_type)
+        # get columns
+        columns, names, ambiguous = self._get_columns(include, exclude, data_type)
         
         # init SQL
-        sql = self._sql_initialize_select(data_type, include, exclude, names)
-        values = []
+        sql, values = self._sql_initialize_select(columns, data_type)
         
         # finalize SQL
         sql, values = self._sql_finalize_select(sql, values, query, names)
@@ -598,13 +597,11 @@ class EDS(object):
         # get connection
         connection = parent.Type.GetConnection(data_type.Name)
         
-        # get column names
-        names, ambiguous = self._get_column_names(data_type, connection)
+        # get columns
+        columns, names, ambiguous = self._get_columns(include, exclude, data_type, connection)
         
         # init SQL
-        excl = exclude if not ambiguous else []
-        sql = self._sql_initialize_select(data_type, include, excl, names)
-        values = []
+        sql, values = self._sql_initialize_select(columns, data_type)
         
         # add link IDs
         buff = []
@@ -705,11 +702,11 @@ class EDS(object):
         # get data type
         data_type = self._report.GetDataType(entity)
         
-        # get column names
-        names, ambiguous = self._get_column_names(data_type)
+        # get columns
+        columns, names, ambiguous = self._get_columns(include, exclude, data_type)
         
         # init query
-        sql = self._sql_initialize_select(data_type, include, exclude, names)
+        sql, values = self._sql_initialize_select(columns, data_type)
         
         # add IDs
         buff = []
@@ -731,26 +728,25 @@ class EDS(object):
                 yield item
     
     
-    def _update_items(self, items, columns):
+    def _update_items(self, items, include):
         """Updates specified properties of given items."""
         
         # get data type
         data_type = self._report.GetDataType(items[0].Type.Name)
         
         # get IDs
-        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        id_columns = [c for c in data_type.IDColumns]
         
-        # select columns
-        names, ambiguous = self._get_column_names(data_type)
-        columns = set(names[c] for c in columns)
-        columns = list(columns.difference(id_columns))
+        # get columns
+        columns, names, ambiguous = self._get_columns(include, None, data_type)
+        columns = list(set(columns).difference(id_columns))
         
         # finalize columns
-        cols = ('"%s" = ?' % c for c in columns)
+        cols = ('"%s" = ?' % c.ColumnName for c in columns)
         cols = ", ".join(cols)
         
         # finalize IDs
-        ids = ('"%s" = ?' % c for c in id_columns)
+        ids = ('"%s" = ?' % c.ColumnName for c in id_columns)
         ids = " AND ".join(ids)
         
         # make query
@@ -759,7 +755,7 @@ class EDS(object):
         # get values
         values = []
         for item in items:
-            values.append([item.GetProperty(c).RawValue for c in columns + id_columns])
+            values.append([item.GetProperty(c.ColumnName).RawValue for c in columns + id_columns])
         
         # execute query
         self._report.ExecuteMany(sql, values)
@@ -767,11 +763,10 @@ class EDS(object):
         # remove dirty flag
         for item in items:
             for prop in item.GetProperties():
-                if prop.Type.ColumnName in columns:
+                if prop.Type in columns:
                     prop.Dirty(False)
         
         # log change
-        columns = [data_type.GetColumn(c) for c in columns]
         self._update_last_change("DataTypesColumns", columns)
     
     
@@ -826,11 +821,15 @@ class EDS(object):
         return EDSQuery(query)
     
     
-    def _get_column_names(self, *sources):
-        """Creates a mapping between column real or display names and column object."""
+    def _get_columns(self, include, exclude, *sources):
+        """Gets columns to be selected and all available column names.."""
         
+        columns = []
         names = {}
         ambiguous = False
+        
+        include = set(include) if include else set()
+        exclude = set(include) if exclude else set()
         
         # use all sources
         for source in sources:
@@ -840,14 +839,22 @@ class EDS(object):
                 if column.ColumnName in names or column.DisplayName in names:
                     ambiguous = True
                 
-                # add by column name
+                # add to names by column name
                 names[column.ColumnName] = column.ColumnName
                 
-                # add by display name
+                # add to names by display name
                 if column.DisplayName and column.DisplayName not in names:
                     names[column.DisplayName] = column.ColumnName
+                
+                # check excluded
+                if column.ColumnName in exclude or column.DisplayName in exclude:
+                    continue
+                
+                # add selected columns or all if none selected
+                if not include or column.ColumnName in include or column.DisplayName in include:
+                    columns.append(column)
         
-        return names, ambiguous
+        return columns, names, ambiguous
     
     
     def _replace_entity_names(self, original):
@@ -874,36 +881,24 @@ class EDS(object):
         return converted
     
     
-    def _sql_initialize_select(self, data_type, include, exclude, names):
+    def _sql_initialize_select(self, columns, data_type):
         """Initializes selection SQL query from data type and requested columns."""
         
-        # get all columns
-        if not include and not exclude:
-            columns = "*"
+        # get selected columns
+        cols = set(c.ColumnName for c in columns)
         
-        # get specified columns
-        else:
-            
-            # get names
-            if include is None:
-                columns = set(names.values())
-            else:
-                columns = set(names[c] for c in include)
-            
-            # remove excluded
-            if exclude:
-                exclude = set(names[c] for c in exclude)
-                columns = columns.difference(exclude)
-            
-            # ensure ID columns are present
-            for column in data_type.IDColumns:
-                columns.add(column.ColumnName)
-            
-            # make identifiers
-            columns = ('"%s"' % c for c in columns)
-            columns = ", ".join(columns)
+        # ensure ID columns are always present
+        for column in data_type.IDColumns:
+            cols.add(column.ColumnName)
         
-        return 'SELECT %s FROM "%s"' % (columns, data_type.TableName)
+        # make identifiers
+        cols = ('"%s"' % c for c in cols)
+        cols = ", ".join(cols)
+        
+        # make SQL
+        sql = 'SELECT %s FROM "%s"' % (cols, data_type.TableName)
+        
+        return sql, []
     
     
     def _sql_finalize_select(self, sql, values, query, names):
