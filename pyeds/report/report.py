@@ -2,6 +2,7 @@
 
 # import modules
 import datetime
+import os.path
 import time
 import shutil
 
@@ -100,7 +101,7 @@ class Report(object):
     
     
     @property
-    def ViewPath(self):
+    def ViewFilePath(self):
         """
         Gets view file path.
         
@@ -248,6 +249,21 @@ class Report(object):
             return True
         
         return False
+    
+    
+    def HasViewFile(self):
+        """
+        Checks if view file exists.
+        
+        Returns:
+            bool
+                True if view file exists, False otherwise.
+        """
+        
+        if not self.ViewFilePath:
+            return False
+        
+        return os.path.exists(self.ViewFilePath)
     
     
     def Open(self):
