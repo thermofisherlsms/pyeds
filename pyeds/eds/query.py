@@ -36,7 +36,7 @@ _GRAMMAR = Grammar(
     limit = 'LIMIT [0-9]+ OFFSET [0-9]+ | LIMIT [0-9]+ | OFFSET [0-9]+ ',
     
     # define full expression
-    expression = 'constraint orderby limit | constraint orderby | constraint limit | orderby | limit | constraint',
+    expression = 'constraint orderby limit | constraint orderby | constraint limit | orderby limit | orderby | limit | constraint',
 )
 
 
@@ -126,47 +126,51 @@ class EDSQuery(Query):
     """
     
     
-    def __init__(self, query, names=None):
+    def __init__(self, query):
         """
         Initializes a new instance of EDSQuery.
         
         Args:
             query: str
                 Query string.
-            
-            names: {str:str} or None
-                Mapping of names to real column names.
         """
         
         super().__init__(query.strip())
-        self._names = names
+        self._names = None
     
     
-    def sql(self):
+    def parse(self, names=None):
         """
         Parses query into SQL conditions and list of values.
         
+        Args:
+            names: {str:str} or None
+                Mapping of column names and display names.
+        
         Returns:
-            (sql, [?,])
-                Tuple of SQL query and values.
+            {'values':[], 'constraint':str, 'orderby':str, 'limit':str}
+                Dictionary of SQL query parts and values.
         """
         
-        sql = ""
-        values = []
+        # set columns names map
+        self._names = names
         
         # extract SQL and values from tree
         if self._tree:
-            sqls, values = self._parse_expression(self._tree[0])
-            sql = " ".join(sqls)
+            return self._parse_expression(self._tree[0])
         
-        return sql, values
+        return None
     
     
     def _parse_expression(self, expr_elm):
         """Parses expression into SQL."""
         
-        sqls = []
-        values = []
+        parsed = {
+            'values': [],
+            'constraint': "",
+            'orderby': "",
+            'limit': "",
+        }
         
         # check element
         if expr_elm[0] != 'expression':
@@ -181,20 +185,22 @@ class EDSQuery(Query):
             # parse constraint
             if elm_name == 'constraint':
                 sqls, values = self._parse_constraint(elm)
+                parsed['constraint'] = " ".join(sqls)
+                parsed['values'] = values
             
             # parse ORDER BY
             elif elm_name == 'orderby':
-                sqls.append(self._parse_orderby(elm))
+                parsed['orderby'] = self._parse_orderby(elm)
             
             # parse LIMIT
             elif elm_name == 'limit':
-                sqls.append(self._parse_limit(elm))
+                parsed['limit'] = self._parse_limit(elm)
             
             # unknown rule
             else:
                 raise KeyError("Unknown rule! --> '%s" % elm_name)
         
-        return sqls, values
+        return parsed
     
     
     def _parse_column(self, col_elm):
@@ -214,9 +220,12 @@ class EDSQuery(Query):
         elif len(col_elm) == 4:
             column = col_elm[2]
         
-        # ensure real column name
+        # check column
         if self._names is not None:
-            column = self._names[column]
+            name = self._names.get(column, None)
+            if name is None:
+                raise KeyError("Unknown column in query! --> '%s" % column)
+            column = name
         
         # escape column name
         if "[" not in column and "]" not in column:

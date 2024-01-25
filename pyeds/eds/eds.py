@@ -156,14 +156,14 @@ class EDS(object):
         # get column names
         names, ambiguous = self._get_column_names(data_type)
         
-        # init query
+        # init SQL
         sql = 'SELECT COUNT(*) FROM "%s"' % data_type.TableName
         values = []
         
-        # finalize query
-        sql, values = self._sql_finalize_select(sql, values, names, query)
+        # finalize SQL
+        sql, values = self._sql_finalize_select(sql, values, query, names)
         
-        # execute SQL query
+        # execute SQL
         results = self._report.Execute(sql, values)
         
         # return count
@@ -196,14 +196,14 @@ class EDS(object):
         # get column names
         names, ambiguous = self._get_column_names(connection)
         
-        # init query
+        # init SQL
         sql = 'SELECT COUNT(*) FROM "%s"' % connection.TableName
         values = []
         
-        # finalize query
-        sql, values = self._sql_finalize_select(sql, values, names, query)
+        # finalize SQL
+        sql, values = self._sql_finalize_select(sql, values, query, names)
         
-        # execute SQL query
+        # execute SQL
         results = self._report.Execute(sql, values)
         
         # return count
@@ -246,16 +246,15 @@ class EDS(object):
                 Items iterator.
         """
         
+        # make query
+        query = self._get_query(query, order, desc, limit, offset)
+        
         # read items
         return self._read_items(
             entity = entity,
             query = query,
-            columns = properties,
-            exclude = exclude,
-            order = order,
-            desc = desc,
-            limit = limit,
-            offset = offset)
+            include = properties,
+            exclude = exclude)
     
     
     def ReadConnected(self, entity, parent, query=None, properties=None, exclude=None, order=None, desc=False, limit=None, offset=0):
@@ -299,17 +298,16 @@ class EDS(object):
                 Items iterator.
         """
         
+        # make query
+        query = self._get_query(query, order, desc, limit, offset)
+        
         # read items
         return self._read_connected(
             entity = entity,
             parent = parent,
             query = query,
-            columns = properties,
-            exclude = exclude,
-            order = order,
-            desc = desc,
-            limit = limit,
-            offset = offset)
+            include = properties,
+            exclude = exclude)
     
     
     def ReadHierarchy(self, path, parent=None, keep=None, queries=None, properties=None, excludes=None, orders=None, descs=None, limits=None, offsets=None):
@@ -396,18 +394,23 @@ class EDS(object):
         limits = self._replace_entity_names(limits) or {}
         offsets = self._replace_entity_names(offsets) or {}
         
+        # make queries
+        for key in path:
+            queries[key] = self._get_query(
+                queries.get(key, None),
+                orders.get(key, None),
+                descs.get(key, None),
+                limits.get(key, None),
+                offsets.get(key, None))
+        
         # read hierarchy
         return self._read_hierarchy(
             path = path,
             parent = parent,
             keep = set(keep),
             queries = queries,
-            columns = properties,
-            excludes = excludes,
-            orders = orders,
-            descs = descs,
-            limits = limits,
-            offsets = offsets)
+            includes = properties,
+            excludes = excludes)
     
     
     def ReadMany(self, entity, ids, properties=None, exclude=None):
@@ -438,7 +441,7 @@ class EDS(object):
         return self._read_many(
             entity = entity,
             ids = ids,
-            columns = properties,
+            include = properties,
             exclude = exclude)
     
     
@@ -559,55 +562,7 @@ class EDS(object):
                 yield [data_type1] + path
     
     
-    def _replace_entity_names(self, original):
-        """Replaces entity names to make sure real names are used."""
-        
-        # check item
-        if original is None:
-            return None
-        
-        # replace dictionary keys
-        if isinstance(original, dict):
-            converted = {}
-            for key, value in original.items():
-                entity = self._report.GetDataType(key)
-                converted[entity.Name] = value
-        
-        # replace lists
-        else:
-            converted = []
-            for key in original:
-                entity = self._report.GetDataType(key)
-                converted.append(entity.Name)
-        
-        return converted
-    
-    
-    def _get_column_names(self, *sources):
-        """Creates a mapping between column display names and real column names."""
-        
-        names = {}
-        ambiguous = False
-        
-        # use all sources
-        for source in sources:
-            for column in source.Columns:
-                
-                # already exists
-                if column.ColumnName in names or column.DisplayName in names:
-                    ambiguous = True
-                
-                # add column name
-                names[column.ColumnName] = column.ColumnName
-                
-                # add display name
-                if column.DisplayName and column.DisplayName not in names:
-                    names[column.DisplayName] = column.ColumnName
-        
-        return names, ambiguous
-    
-    
-    def _read_items(self, entity, query=None, columns=None, exclude=None, order=None, desc=False, limit=None, offset=0):
+    def _read_items(self, entity, query=None, include=None, exclude=None):
         """Reads items of given data type name."""
         
         # get data type
@@ -616,14 +571,14 @@ class EDS(object):
         # get column names
         names, ambiguous = self._get_column_names(data_type)
         
-        # init query
-        sql = self._sql_initialize_select(data_type, columns, exclude, names)
+        # init SQL
+        sql = self._sql_initialize_select(data_type, include, exclude, names)
         values = []
         
-        # finalize query
-        sql, values = self._sql_finalize_select(sql, values, names, query, order, desc, limit, offset)
+        # finalize SQL
+        sql, values = self._sql_finalize_select(sql, values, query, names)
         
-        # execute query
+        # execute SQL
         results = self._report.Execute(sql, values)
         
         # yield items
@@ -634,7 +589,7 @@ class EDS(object):
             yield item
     
     
-    def _read_connected(self, entity, parent, query=None, columns=None, exclude=None, order=None, desc=False, limit=None, offset=0):
+    def _read_connected(self, entity, parent, query=None, include=None, exclude=None):
         """Reads directly connected items of given data type name."""
         
         # get data type
@@ -646,9 +601,9 @@ class EDS(object):
         # get column names
         names, ambiguous = self._get_column_names(data_type, connection)
         
-        # init query
+        # init SQL
         excl = exclude if not ambiguous else []
-        sql = self._sql_initialize_select(data_type, columns, excl, names)
+        sql = self._sql_initialize_select(data_type, include, excl, names)
         values = []
         
         # add link IDs
@@ -664,10 +619,10 @@ class EDS(object):
             values.append(parent.GetValue(column.ColumnName))
         sql += ' WHERE (%s)' % (' AND '.join(buff))
         
-        # finalize query
-        sql, values = self._sql_finalize_select(sql, values, names, query, order, desc, limit, offset)
+        # finalize SQL
+        sql, values = self._sql_finalize_select(sql, values, query, names)
         
-        # execute query
+        # execute SQL
         results = self._report.Execute(sql, values)
         
         # yield items
@@ -679,7 +634,7 @@ class EDS(object):
             yield item
     
     
-    def _read_hierarchy(self, path, parent, keep=(), queries={}, columns={}, excludes={}, orders={}, descs={}, limits={}, offsets={}):
+    def _read_hierarchy(self, path, parent, keep=(), queries={}, includes={}, excludes={}):
         """Reads connected items along the given path."""
         
         # get path
@@ -691,28 +646,20 @@ class EDS(object):
         
         # get specified settings
         query = queries.get(entity, None)
-        cols = columns.get(entity, None)
+        include = includes.get(entity, None)
         exclude = excludes.get(entity, None)
-        order = orders.get(entity, None)
-        desc = descs.get(entity, False)
-        limit = limits.get(entity, None)
-        offset = offsets.get(entity, 0)
         
         # use just ID columns if to keep
-        if entity not in keep and cols is None and len(path) != 1:
-            cols = []
+        if entity not in keep and include is None and len(path) != 1:
+            include = []
         
         # read parents
         if parent is None:
             items = self._read_items(
                 entity = entity,
                 query = query,
-                columns = cols,
-                exclude = exclude,
-                order = order,
-                desc = desc,
-                limit = limit,
-                offset = offset)
+                include = include,
+                exclude = exclude)
         
         # read children of given parent
         else:
@@ -720,12 +667,8 @@ class EDS(object):
                 entity = entity,
                 parent = parent,
                 query = query,
-                columns = cols,
-                exclude = exclude,
-                order = order,
-                desc = desc,
-                limit = limit,
-                offset = offset)
+                include = include,
+                exclude = exclude)
         
         # end of path reached
         if len(path) == 1:
@@ -742,12 +685,8 @@ class EDS(object):
                 parent = item,
                 keep = keep,
                 queries = queries,
-                columns = columns,
-                excludes = excludes,
-                orders = orders,
-                descs = descs,
-                limits = limits,
-                offsets = offsets)
+                includes = includes,
+                excludes = excludes)
             
             # keep this entity
             if entity in keep:
@@ -760,7 +699,7 @@ class EDS(object):
                     yield child
     
     
-    def _read_many(self, entity, ids, columns=None, exclude=None):
+    def _read_many(self, entity, ids, include=None, exclude=None):
         """Reads items of given data type name for specified IDs."""
         
         # get data type
@@ -770,7 +709,7 @@ class EDS(object):
         names, ambiguous = self._get_column_names(data_type)
         
         # init query
-        sql = self._sql_initialize_select(data_type, columns, exclude, names)
+        sql = self._sql_initialize_select(data_type, include, exclude, names)
         
         # add IDs
         buff = []
@@ -859,21 +798,97 @@ class EDS(object):
         self._report.ExecuteMany(sql, values)
     
     
-    def _sql_initialize_select(self, data_type, columns, exclude, names):
+    def _get_query(self, query, order, desc, limit, offset):
+        """Gets query including order and limit."""
+        
+        # init query
+        query = str(query) if query else ''
+        
+        # add sorting if not in query
+        if order and "ORDER BY " not in query:
+            query += ' ORDER BY "%s"' % order
+            if desc:
+                query += ' DESC'
+        
+        # add limit if not in query
+        if limit and "LIMIT " not in query:
+            query += ' LIMIT %d' % limit
+        
+        # add offset if not in query
+        if offset and "OFFSET " not in query:
+            query += ' OFFSET %d' % offset
+        
+        # check query
+        if not query:
+            return None
+        
+        # make query
+        return EDSQuery(query)
+    
+    
+    def _get_column_names(self, *sources):
+        """Creates a mapping between column real or display names and column object."""
+        
+        names = {}
+        ambiguous = False
+        
+        # use all sources
+        for source in sources:
+            for column in source.Columns:
+                
+                # already exists
+                if column.ColumnName in names or column.DisplayName in names:
+                    ambiguous = True
+                
+                # add by column name
+                names[column.ColumnName] = column.ColumnName
+                
+                # add by display name
+                if column.DisplayName and column.DisplayName not in names:
+                    names[column.DisplayName] = column.ColumnName
+        
+        return names, ambiguous
+    
+    
+    def _replace_entity_names(self, original):
+        """Replaces entity names to make sure real names are used."""
+        
+        # check item
+        if original is None:
+            return None
+        
+        # replace dictionary keys
+        if isinstance(original, dict):
+            converted = {}
+            for key, value in original.items():
+                entity = self._report.GetDataType(key)
+                converted[entity.Name] = value
+        
+        # replace lists
+        else:
+            converted = []
+            for key in original:
+                entity = self._report.GetDataType(key)
+                converted.append(entity.Name)
+        
+        return converted
+    
+    
+    def _sql_initialize_select(self, data_type, include, exclude, names):
         """Initializes selection SQL query from data type and requested columns."""
         
         # get all columns
-        if columns is None and not exclude:
+        if not include and not exclude:
             columns = "*"
         
         # get specified columns
         else:
             
             # get names
-            if columns is None:
+            if include is None:
                 columns = set(names.values())
             else:
-                columns = set(names[c] for c in columns)
+                columns = set(names[c] for c in include)
             
             # remove excluded
             if exclude:
@@ -891,33 +906,39 @@ class EDS(object):
         return 'SELECT %s FROM "%s"' % (columns, data_type.TableName)
     
     
-    def _sql_finalize_select(self, sql, values, names, query=None, order=None, desc=False, limit=None, offset=0):
+    def _sql_finalize_select(self, sql, values, query, names):
         """Finalizes SQL query by adding conditions, sorting and range."""
         
-        # add query
-        if query:
-            
-            qsql, qval = EDSQuery(query, names).sql()
-            values += qval
-            
-            if " WHERE " not in sql:
-                sql += ' WHERE %s' % qsql
+        # check query
+        if not query:
+            return sql, values
+        
+        # init query
+        if not isinstance(query, EDSQuery):
+            query = EDSQuery(query)
+        
+        # parse query
+        parsed = query.parse(names)
+        if parsed is None:
+            return sql, values
+        
+        # add values
+        values += parsed['values']
+        
+        # add constraint
+        if parsed['constraint']:
+            if " WHERE " in sql:
+                sql += ' AND (%s)' % parsed['constraint']
             else:
-                sql += ' AND (%s)' % qsql
+                sql += ' WHERE %s' % parsed['constraint']
         
-        # add sorting if not in query
-        if order and "ORDER BY " not in sql:
-            sql += ' ORDER BY "%s"' % names[order]
-            if desc:
-                sql += ' DESC'
+        # add order by
+        if parsed['orderby']:
+            sql += ' %s' % parsed['orderby']
         
-        # add limit if not in query
-        if limit and "LIMIT " not in sql:
-            sql += ' LIMIT %d' % limit
-        
-        # add offset if not in query
-        if offset and "OFFSET " not in sql:
-            sql += ' OFFSET %d' % offset
+        # add limit
+        if parsed['limit']:
+            sql += ' %s' % parsed['limit']
         
         return sql, values
     
