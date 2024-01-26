@@ -8,7 +8,7 @@ _GRAMMAR = Grammar(
     
     # define keywords
     log = 'AND | OR',
-    op = '<= | >= | != | = | < | > | LIKE',
+    op = '<= | >= | != | = | < | > | LIKE | NOT LIKE',
     null = 'IS NULL | IS NOT NULL',
     desc = 'DESC | ASC',
     
@@ -373,8 +373,17 @@ class EDSQuery(Query):
         if op_elm[0] != 'op':
             raise KeyError("Incorrect element! --> '%s" % op_elm[0])
         
-        # parse operand
-        return '%s ?' % op_elm[1]
+        # parse LIKE
+        if op_elm[1] == 'LIKE':
+            return 'LIKE ?'
+        
+        # parse NOT LIKE
+        elif op_elm[1] == 'NOT':
+            return 'NOT LIKE ?'
+        
+        # invalid element
+        else:
+            raise KeyError("Incorrect operator element! --> '%s" % op_elm)
     
     
     def _parse_inside(self, in_elm):
@@ -397,6 +406,10 @@ class EDSQuery(Query):
             values = self._parse_sequence(in_elm[4])
             sql = 'NOT IN (%s)' % (", ".join("?"*len(values)),)
         
+        # invalid element
+        else:
+            raise KeyError("Incorrect IN element! --> '%s" % in_elm)
+        
         return sql, values
     
     
@@ -414,6 +427,10 @@ class EDSQuery(Query):
         # parse IS NOT NULL
         elif null_elm[2] == 'NOT':
             return 'IS NOT NULL'
+        
+        # invalid element
+        else:
+            raise KeyError("Incorrect NULL element! --> '%s" % null_elm)
     
     
     def _parse_group(self, group_elm):
@@ -520,6 +537,10 @@ class EDSQuery(Query):
         # parse ASC
         elif desc_elm[1] == 'ASC':
             return 'ASC'
+        
+        # invalid element
+        else:
+            raise KeyError("Incorrect DESC element! --> '%s" % desc_elm)
     
     
     def _parse_limit(self, lim_elm):
