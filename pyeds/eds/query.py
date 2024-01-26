@@ -13,10 +13,10 @@ _GRAMMAR = Grammar(
     desc = 'DESC | ASC',
     
     # define columns
-    column = '[A-Za-z0-9_]+ | \' [A-Za-z0-9-_\.\s\(\)\[\]\+\-]+ \' | \" [A-Za-z0-9-_\.\s\(\)\[\]\+\-]+ \"',
+    column = '[A-Za-z0-9_]+ | \' [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \' | \" [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \"',
     
     # define values
-    value = '[A-Za-z0-9-_%\.]+ | \' [A-Za-z0-9-_%\.\s\(\)\[\]\+\-]* \' | \" [A-Za-z0-9-_%\.\s\(\)\[\]\+\-]* \"',
+    value = '[A-Za-z0-9-_%\.]+ | \' [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \' | \" [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \"',
     sequence = 'value , sequence | value , | value',
     
     # define IN
