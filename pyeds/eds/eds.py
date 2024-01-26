@@ -104,7 +104,8 @@ class EDS(object):
                 Final data type name.
             
             via: (str,)
-                Names of data types required within the path.
+                Names of data types required within the path. Note that order
+                is not guaranteed.
         
         Returns:
             (str,)
@@ -116,7 +117,7 @@ class EDS(object):
         data_type2 = self._report.GetDataType(to_entity)
         
         # prepare via
-        via = set(via)
+        via = set(self._replace_entity_names(via))
         
         # init buffers
         best_path = None
@@ -159,21 +160,8 @@ class EDS(object):
         # get data type
         data_type = self._report.GetDataType(entity)
         
-        # get columns
-        columns, names, ambiguous = self._get_columns(None, None, data_type)
-        
-        # init SQL
-        sql = 'SELECT COUNT(*) FROM %s AS %s' % (data_type.TableName, data_type.T_ALIAS)
-        values = []
-        
-        # finalize SQL
-        sql, values = self._sql_finalize_select(sql, values, query, names)
-        
-        # execute SQL
-        results = self._report.Execute(sql, values)
-        
-        # return count
-        return results.fetchone()[0]
+        # count items
+        return self._count_items(data_type, query)
     
     
     def CountConnections(self, entity1, entity2, query=None):
@@ -199,21 +187,8 @@ class EDS(object):
         data_type1 = self._report.GetDataType(entity1)
         connection = data_type1.GetConnection(entity2)
         
-        # get columns
-        columns, names, ambiguous = self._get_columns(None, None, connection)
-        
-        # init SQL
-        sql = 'SELECT COUNT(*) FROM %s AS %s' % (connection.TableName, connection.T_ALIAS)
-        values = []
-        
-        # finalize SQL
-        sql, values = self._sql_finalize_select(sql, values, query, names)
-        
-        # execute SQL
-        results = self._report.Execute(sql, values)
-        
-        # return count
-        return results.fetchone()[0]
+        # count items
+        return self._count_items(connection, query)
     
     
     def Read(self, entity, query=None, properties=None, exclude=None, order=None, desc=False, limit=None, offset=0):
@@ -451,12 +426,13 @@ class EDS(object):
             exclude = exclude)
     
     
-    def Update(self, items, properties=None, save=True):
+    def Update(self, items, properties=None):
         """
         Updates specified properties of given items.
         
         Be sure to back up your original results before making any changes! You
-        can use the pero.EDS.Report.Backup method.
+        can use the pero.EDS.Report.Backup method. All changes are saved
+        immediately.
         
         Note, that all items must be of the same entity type. ID properties,
         connection properties and newly added properties cannot be updated.
@@ -469,10 +445,6 @@ class EDS(object):
                 Names of properties to update. If set to None, all modified
                 properties will be updated even if modified just for a single
                 item.
-            
-            save: bool
-                If set to True, database changes are commit. Otherwise, all the
-                changes are lost when current connection closes.
         """
         
         # check items
@@ -486,10 +458,13 @@ class EDS(object):
         if any(d.Type.ID != data_type.ID for d in items):
             raise ValueError("All items must be of the same entity!")
         
+        # check if view file exists
+        view_available = self._report.HasViewFile()
+        
         # retrieve all dirty properties
         if properties is None:
             props = (prop for item in items for prop in item.GetProperties())
-            props = (prop for prop in props if (prop.Dirty() and not prop.Type.Virtual))
+            props = (prop for prop in props if (prop.IsDirty and not prop.Type.Virtual))
             properties = set(prop.Type.ColumnName for prop in props)
         
         # check properties
@@ -501,8 +476,8 @@ class EDS(object):
             if data_type.GetColumn(prop).Virtual:
                 raise ValueError("Custom properties cannot be saved! -> '%s'" % (prop,))
             
-            if data_type.GetColumn(prop).IsInViewFile:
-                raise ValueError("View file properties cannot be saved! -> '%s'" % (prop,))
+            if data_type.GetColumn(prop).IsInViewFile and not view_available:
+                raise ValueError("View file properties cannot be saved! Missing view file. -> '%s'" % (prop,))
         
         # no properties
         if not properties:
@@ -511,9 +486,11 @@ class EDS(object):
         # update items
         self._update_items(items, properties)
         
-        # commit changes
-        if save:
-            self._report.Save()
+        # remove dirty flag
+        for item in items:
+            for prop in item.GetProperties():
+                if prop.Type.ColumnName in properties or prop.Type.DisplayName in properties:
+                    prop.Dirty(False)
     
     
     def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=None):
@@ -568,6 +545,38 @@ class EDS(object):
                 yield [data_type1] + path
     
     
+    def _count_items(self, data_type, query=None):
+        """Counts items of given data type."""
+        
+        # get columns
+        columns, names, ambiguous = self._get_columns(None, None, data_type)
+        
+        # attach view file
+        needs_view = self._attach_view_file(columns)
+        
+        # init SQL
+        sql = 'SELECT COUNT(*) FROM %s AS %s' % (data_type.TableName, data_type.T_ALIAS)
+        values = []
+        
+        # add view file SQL
+        if needs_view:
+            sql = self._sql_view_file_select(sql, columns, data_type)
+        
+        # finalize SQL
+        sql, values = self._sql_main_file_finalize(sql, values, query, names)
+        
+        # execute SQL
+        results = self._report.Execute(sql, values)
+        count = results.fetchone()[0]
+        
+        # detach view file
+        if needs_view:
+            self._detach_view_file()
+        
+        # return count
+        return count
+    
+    
     def _read_items(self, entity, query=None, include=None, exclude=None):
         """Reads items of given data type name."""
         
@@ -581,13 +590,14 @@ class EDS(object):
         needs_view = self._attach_view_file(columns)
         
         # init SQL
-        sql, values = self._sql_initialize_select(columns, data_type, names)
+        sql, values = self._sql_main_file_select(columns, data_type, names)
         
         # add view file SQL
-        sql += self._sql_view_file_select(columns, data_type)
+        if needs_view:
+            sql = self._sql_view_file_select(sql, columns, data_type)
         
         # finalize SQL
-        sql, values = self._sql_finalize_select(sql, values, query, names)
+        sql, values = self._sql_main_file_finalize(sql, values, query, names)
         
         # execute SQL
         results = self._report.Execute(sql, values)
@@ -620,7 +630,7 @@ class EDS(object):
         needs_view = self._attach_view_file(columns)
         
         # init SQL
-        sql, values = self._sql_initialize_select(columns, data_type, names)
+        sql, values = self._sql_main_file_select(columns, data_type, names)
         
         # add link IDs
         buff = []
@@ -629,7 +639,8 @@ class EDS(object):
         sql += ' INNER JOIN %s %s ON %s' % (connection.TableName, connection.T_ALIAS, ' AND '.join(buff))
         
         # add view file SQL
-        sql += self._sql_view_file_select(columns, data_type)
+        if needs_view:
+            sql = self._sql_view_file_select(sql, columns, data_type)
         
         # add parent IDs
         buff = []
@@ -639,7 +650,7 @@ class EDS(object):
         sql += ' WHERE (%s)' % (' AND '.join(buff))
         
         # finalize SQL
-        sql, values = self._sql_finalize_select(sql, values, query, names)
+        sql, values = self._sql_main_file_finalize(sql, values, query, names)
         
         # execute SQL
         results = self._report.Execute(sql, values)
@@ -733,11 +744,12 @@ class EDS(object):
         # attach view file
         needs_view = self._attach_view_file(columns)
         
-        # init query
-        sql, values = self._sql_initialize_select(columns, data_type, names)
+        # init SQL
+        sql, values = self._sql_main_file_select(columns, data_type, names)
         
         # add view file SQL
-        sql += self._sql_view_file_select(columns, data_type)
+        if needs_view:
+            sql = self._sql_view_file_select(sql, columns, data_type)
         
         # add IDs
         buff = []
@@ -773,36 +785,34 @@ class EDS(object):
         id_columns = [c for c in data_type.IDColumns]
         
         # get columns
-        columns, names, ambiguous = self._get_columns(include, None, data_type)
-        columns = list(set(columns).difference(id_columns))
+        columns, names, ambiguous = self._get_columns(include, id_columns, data_type)
         
-        # finalize columns
-        cols = ('%s = ?' % names[c.ColumnName] for c in columns)
-        cols = ", ".join(cols)
+        # attach view file
+        needs_view = self._attach_view_file(columns)
         
-        # finalize IDs
-        ids = ('%s = ?' % names[c.ColumnName] for c in id_columns)
-        ids = " AND ".join(ids)
+        # init SQL
+        sql = ""
+        values = [[]] * len(items)
         
-        # make query
-        sql = 'UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        # add main file SQL
+        sql, values = self._sql_main_file_update(sql, values, items, columns, data_type)
         
-        # get values
-        values = []
-        for item in items:
-            values.append([item.GetProperty(c.ColumnName).RawValue for c in columns + id_columns])
+        # add view file SQL
+        if needs_view:
+            sql, values = self._sql_view_file_update(sql, values, items, columns, data_type)
         
         # execute query
         self._report.ExecuteMany(sql, values)
         
-        # remove dirty flag
-        for item in items:
-            for prop in item.GetProperties():
-                if prop.Type in columns:
-                    prop.Dirty(False)
-        
         # log change
         self._update_last_change("DataTypesColumns", columns)
+        
+        # commit changes
+        self._report.Commit()
+        
+        # detach view file
+        if needs_view:
+            self._detach_view_file()
     
     
     def _update_last_change(self, table_name, columns):
@@ -930,7 +940,7 @@ class EDS(object):
         return converted
     
     
-    def _sql_initialize_select(self, columns, data_type, names):
+    def _sql_main_file_select(self, columns, data_type, names):
         """Initializes selection SQL query from data type and requested columns."""
         
         # get selected columns names
@@ -949,30 +959,7 @@ class EDS(object):
         return sql, []
     
     
-    def _sql_view_file_select(self, columns, data_type):
-        """Makes SQL to join view file tables and select columns."""
-        
-        # get view columns
-        columns = [c for c in columns if c.IsInViewFile]
-        
-        # get ID columns
-        id_columns = [c.ColumnName for c in data_type.IDColumns]
-        
-        # add SQL for each table
-        sqls = []
-        idx = 0
-        
-        for column in columns:
-            idx += 1
-            ids = " AND ".join('%s.%s = V%d.%s' % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
-            sql = 'LEFT JOIN %s.%s_%s V%d ON %s' % (_VIEWFILE, data_type.TableName, column.ColumnName, idx, ids)
-            sqls.append(sql)
-        
-        # make SQL
-        return " " + " ".join(sqls)
-    
-    
-    def _sql_finalize_select(self, sql, values, query, names):
+    def _sql_main_file_finalize(self, sql, values, query, names):
         """Finalizes SQL query by adding conditions, sorting and range."""
         
         # check query
@@ -1005,6 +992,93 @@ class EDS(object):
         # add limit
         if parsed['limit']:
             sql += ' %s' % parsed['limit']
+        
+        return sql, values
+    
+    
+    def _sql_main_file_update(self, sql, values, items, columns, data_type):
+        """Makes SQL to join view file tables and update columns."""
+        
+        # get view columns
+        columns = [c.ColumnName for c in columns if not c.IsInViewFile]
+        
+        # skip if not needed
+        if not columns:
+            return sql, values
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # get columns
+        cols = ", ".join('%s = ?' % c for c in columns)
+        
+        # get IDs
+        ids = " AND ".join('%s = ?' % c for c in id_columns)
+        
+        # make query
+        sql += ' UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        
+        # set values
+        for i, item in enumerate(items):
+            values[i] = values[i] + [item.GetProperty(c).RawValue for c in columns + id_columns]
+        
+        return sql, values
+    
+    
+    def _sql_view_file_select(self, sql, columns, data_type):
+        """Makes SQL to join view file tables and select columns."""
+        
+        # get view columns
+        columns = [c.ColumnName for c in columns if c.IsInViewFile]
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # add SQL for each table
+        idx = 0
+        for column in columns:
+            idx += 1
+            ids = " AND ".join('%s.%s = V%d.%s' % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
+            sql += ' LEFT JOIN %s.%s_%s V%d ON %s' % (_VIEWFILE, data_type.TableName, column, idx, ids)
+        
+        return sql
+    
+    
+    def _sql_view_file_update(self, sql, values, items, columns, data_type):
+        """Makes SQL to join view file tables and update columns."""
+        
+        # get view columns
+        columns = [c.ColumnName for c in columns if c.IsInViewFile]
+        
+        # skip if not needed
+        if not columns:
+            return sql
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # get values placeholder
+        places = ", ".join(["?"] * (len(id_columns) + 1))
+        
+        # add SQL for each table
+        idx = 0
+        for column in columns:
+            idx += 1
+            
+            # init SQL
+            sql += 'INSERT OR REPLACE INTO %s.%s_%s' % (_VIEWFILE, data_type.TableName, column)
+            
+            # add IDs
+            ids = ", ".join('%s' % (c,) for c in id_columns)
+            sql += ' (%s, %s)' % (ids, column)
+            
+            # add placeholders
+            sql += ' VALUES (%s)' % places
+            
+            # update values
+            for i, item in enumerate(items):
+                values[i] = values[i] + [item.GetValue(c) for c in id_columns]
+                values[i] = values[i] + [item.GetProperty(column).RawValue]
         
         return sql, values
     
