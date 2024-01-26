@@ -118,6 +118,19 @@ class PropertyValue(Lockable):
         return self._raw_value
     
     
+    @property
+    def IsDirty(self):
+        """
+        Gets property dirty flag.
+        
+        Returns:
+            bool:
+                Current flag state.
+        """
+        
+        return self._dirty
+    
+    
     def SetValue(self, value):
         """
         Sets given value to property.
@@ -152,35 +165,26 @@ class PropertyValue(Lockable):
         self._dirty = True
     
     
-    def Dirty(self, value=None):
+    def Dirty(self, value):
         """
         Gets or sets property dirty flag.
         
         Args:
-            value: bool or None
-                If set to True or False, the value is set.
-        
-        Returns:
-            bool:
-                Current flag state.
+            value: bool
+                Flag value is set.
         """
         
-        # set value
-        if value is not None:
-            
-            # unlock if needed
-            locked = self.Locked()
-            if locked:
-                self.Unlock()
-            
-            # set value
-            self._dirty = bool(value)
-            
-            # lock if needed
-            if locked:
-                self.Lock()
+        # unlock if needed
+        locked = self.Locked()
+        if locked:
+            self.Unlock()
         
-        return self._dirty
+        # set value
+        self._dirty = bool(value)
+        
+        # lock if needed
+        if locked:
+            self.Lock()
     
     
     def _convert_value(self, value):
