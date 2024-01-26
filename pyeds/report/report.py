@@ -330,20 +330,7 @@ class Report(object):
         return self._db.executemany(sql, values)
     
     
-    def Backup(self):
-        """Creates database backup."""
-        
-        # get time stamp
-        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
-        
-        # init file name
-        filename = "%s_%s.bak" % (self._db.path, stamp)
-        
-        # duplicate file
-        shutil.copy(self._db.path, filename)
-    
-    
-    def Save(self):
+    def Commit(self):
         """Commits current changes."""
         
         # assert connection
@@ -351,6 +338,23 @@ class Report(object):
         
         # commit changes
         self._db.commit()
+    
+    
+    def Backup(self, result=True, view=True):
+        """Creates database backup."""
+        
+        # get time stamp
+        stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')
+        
+        # backup main file
+        if result:
+            filename = "%s_%s.bak" % (self.Path, stamp)
+            shutil.copy(self.Path, filename)
+        
+        # backup view file
+        if view and self.HasViewFile():
+            filename = "%s_%s.bak" % (self.ViewFilePath, stamp)
+            shutil.copy(self.ViewFilePath, filename)
     
     
     def _initialize(self):
