@@ -790,19 +790,12 @@ class EDS(object):
         # attach view file
         needs_view = self._attach_view_file(columns)
         
-        # init SQL
-        sql = ""
-        values = [[]] * len(items)
+        # update main file
+        self._update_main_file_items(items, columns, data_type)
         
-        # add main file SQL
-        sql, values = self._sql_main_file_update(sql, values, items, columns, data_type)
-        
-        # add view file SQL
+        # update view file
         if needs_view:
-            sql, values = self._sql_view_file_update(sql, values, items, columns, data_type)
-        
-        # execute query
-        self._report.ExecuteMany(sql, values)
+            self._update_view_file_items(items, columns, data_type)
         
         # log change
         self._update_last_change("DataTypesColumns", columns)
@@ -813,6 +806,75 @@ class EDS(object):
         # detach view file
         if needs_view:
             self._detach_view_file()
+    
+    
+    def _update_main_file_items(self, items, columns, data_type):
+        """Update columns in main file."""
+        
+        # get columns
+        columns = [c.ColumnName for c in columns if not c.IsIDColumn and not c.IsInViewFile]
+        
+        # skip if not needed
+        if not columns:
+            return
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # get columns
+        cols = ", ".join('%s = ?' % c for c in columns)
+        
+        # get IDs
+        ids = " AND ".join('%s = ?' % c for c in id_columns)
+        
+        # make SQL
+        sql = 'UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        
+        # set values
+        values = []
+        for i, item in enumerate(items):
+            values.append([item.GetProperty(c).RawValue for c in columns + id_columns])
+        
+        # execute query
+        self._report.ExecuteMany(sql, values)
+    
+    
+    def _update_view_file_items(self, items, columns, data_type):
+        """Update columns in view file."""
+        
+        # get columns
+        columns = [c.ColumnName for c in columns if c.IsInViewFile]
+        
+        # skip if not needed
+        if not columns:
+            return
+        
+        # get ID columns
+        id_columns = [c.ColumnName for c in data_type.IDColumns]
+        
+        # get values placeholder
+        places = ", ".join(["?"] * (len(id_columns) + 1))
+        
+        # update each table
+        for column in columns:
+            
+            # init SQL
+            sql = 'INSERT OR REPLACE INTO %s.%s_%s' % (_VIEWFILE, data_type.TableName, column)
+            
+            # add IDs
+            ids = ", ".join('%s' % (c,) for c in id_columns)
+            sql += ' (%s, %s)' % (ids, column)
+            
+            # add placeholders
+            sql += ' VALUES (%s) ;' % places
+            
+            # make values
+            values = []
+            for i, item in enumerate(items):
+                values.append([item.GetProperty(c).RawValue for c in id_columns + [column]])
+            
+            # execute query
+            self._report.ExecuteMany(sql, values)
     
     
     def _update_last_change(self, table_name, columns):
@@ -996,40 +1058,11 @@ class EDS(object):
         return sql, values
     
     
-    def _sql_main_file_update(self, sql, values, items, columns, data_type):
-        """Makes SQL to join view file tables and update columns."""
-        
-        # get view columns
-        columns = [c.ColumnName for c in columns if not c.IsInViewFile]
-        
-        # skip if not needed
-        if not columns:
-            return sql, values
-        
-        # get ID columns
-        id_columns = [c.ColumnName for c in data_type.IDColumns]
-        
-        # get columns
-        cols = ", ".join('%s = ?' % c for c in columns)
-        
-        # get IDs
-        ids = " AND ".join('%s = ?' % c for c in id_columns)
-        
-        # make query
-        sql += ' UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
-        
-        # set values
-        for i, item in enumerate(items):
-            values[i] = values[i] + [item.GetProperty(c).RawValue for c in columns + id_columns]
-        
-        return sql, values
-    
-    
     def _sql_view_file_select(self, sql, columns, data_type):
         """Makes SQL to join view file tables and select columns."""
         
-        # get view columns
-        columns = [c.ColumnName for c in columns if c.IsInViewFile]
+        # get columns
+        columns = [c.ColumnName for c in columns if not c.IsIDColumn and c.IsInViewFile]
         
         # get ID columns
         id_columns = [c.ColumnName for c in data_type.IDColumns]
@@ -1042,45 +1075,6 @@ class EDS(object):
             sql += ' LEFT JOIN %s.%s_%s V%d ON %s' % (_VIEWFILE, data_type.TableName, column, idx, ids)
         
         return sql
-    
-    
-    def _sql_view_file_update(self, sql, values, items, columns, data_type):
-        """Makes SQL to join view file tables and update columns."""
-        
-        # get view columns
-        columns = [c.ColumnName for c in columns if c.IsInViewFile]
-        
-        # skip if not needed
-        if not columns:
-            return sql
-        
-        # get ID columns
-        id_columns = [c.ColumnName for c in data_type.IDColumns]
-        
-        # get values placeholder
-        places = ", ".join(["?"] * (len(id_columns) + 1))
-        
-        # add SQL for each table
-        idx = 0
-        for column in columns:
-            idx += 1
-            
-            # init SQL
-            sql += 'INSERT OR REPLACE INTO %s.%s_%s' % (_VIEWFILE, data_type.TableName, column)
-            
-            # add IDs
-            ids = ", ".join('%s' % (c,) for c in id_columns)
-            sql += ' (%s, %s)' % (ids, column)
-            
-            # add placeholders
-            sql += ' VALUES (%s)' % places
-            
-            # update values
-            for i, item in enumerate(items):
-                values[i] = values[i] + [item.GetValue(c) for c in id_columns]
-                values[i] = values[i] + [item.GetProperty(column).RawValue]
-        
-        return sql, values
     
     
     def _attach_view_file(self, columns):
