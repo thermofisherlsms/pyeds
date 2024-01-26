@@ -890,6 +890,11 @@ class EDS(object):
                 if column.DisplayName and column.DisplayName not in names:
                     names[column.DisplayName] = name
                 
+                # allways add IDs
+                if column.IsIDColumn:
+                    columns.append(column)
+                    continue
+                
                 # check excluded
                 if column.ColumnName in exclude or column.DisplayName in exclude:
                     continue
