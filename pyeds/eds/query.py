@@ -412,7 +412,7 @@ class EDSQuery(Query):
             return 'IS NULL'
         
         # parse IS NOT NULL
-        elif null_elm[1] == 'NOT':
+        elif null_elm[2] == 'NOT':
             return 'IS NOT NULL'
     
     
