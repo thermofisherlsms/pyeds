@@ -373,17 +373,12 @@ class EDSQuery(Query):
         if op_elm[0] != 'op':
             raise KeyError("Incorrect element! --> '%s" % op_elm[0])
         
-        # parse LIKE
-        if op_elm[1] == 'LIKE':
-            return 'LIKE ?'
-        
         # parse NOT LIKE
-        elif op_elm[1] == 'NOT':
-            return 'NOT LIKE ?'
+        if op_elm[1] == 'NOT':
+            return 'NOT %s ?' % op_elm[2]
         
-        # invalid element
-        else:
-            raise KeyError("Incorrect operator element! --> '%s" % op_elm)
+        # parse operand
+        return '%s ?' % op_elm[1]
     
     
     def _parse_inside(self, in_elm):
