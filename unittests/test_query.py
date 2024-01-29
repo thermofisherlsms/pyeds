@@ -88,6 +88,12 @@ class TestCase(unittest.TestCase):
         self.assertEqual(query['values'], ['1'])
         self.assertEqual(query['orderby'], "")
         self.assertEqual(query['limit'], "")
+        
+        query = pyeds.eds.EDSQuery("Column NOT IN (1, 2, 3)").parse()
+        self.assertEqual(query['constraint'], "Column NOT IN (?, ?, ?)")
+        self.assertEqual(query['values'], ['1', '2', '3'])
+        self.assertEqual(query['orderby'], "")
+        self.assertEqual(query['limit'], "")
     
     
     def test_and(self):
