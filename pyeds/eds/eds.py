@@ -396,7 +396,7 @@ class EDS(object):
             entity: str
                 Data type name.
             
-            ids: ((int,),)
+            ids: ((int,),) or (pyeds.EntityItem,)
                 Items IDs.
             
             properties: (str,) or None
@@ -543,7 +543,9 @@ class EDS(object):
         """Counts items of given data type."""
         
         # get columns
-        columns, names, ambiguous = self._get_columns(None, None, data_type) if query else [], {}, False
+        columns, names, ambiguous = self._get_columns(None, None, data_type)
+        if not query:
+            columns = []
         
         # attach view file
         needs_view = self._attach_view_file(columns)
@@ -753,6 +755,10 @@ class EDS(object):
         
         # read items
         for values in ids:
+            
+            # get IDs
+            if isinstance(values, EntityItem):
+                values = values.IDs
             
             # execute query
             results = self._report.Execute(sql, values)
