@@ -412,6 +412,7 @@ class Summary(object):
         html += "    <thead>\n"
         html += "      <tr>\n"
         html += "        <th>ID</th>\n"
+        html += "        <th>Available</th>\n"
         html += "        <th>Name</th>\n"
         html += "        <th>Display Name</th>\n"
         html += "        <th>Description</th>\n"
@@ -430,6 +431,7 @@ class Summary(object):
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % data_type.ID
+            html += "        <td class=\"center\">%s</td>\n" % data_type.IsAvailable
             html += "        <td><a href=\"#%s\" %s>%s</a></td>\n" % (anchor, pop, data_type.Name)
             html += "        <td><a href=\"#%s\" %s>%s</a></td>\n" % (anchor, pop, data_type.DisplayName)
             html += "        <td>%s</td>\n" % data_type.Description
@@ -465,6 +467,7 @@ class Summary(object):
         html += "    <thead>\n"
         html += "      <tr>\n"
         html += "        <th>ID</th>\n"
+        html += "        <th>Available</th>\n"
         html += "        <th>Name</th>\n"
         html += "        <th>Display Name</th>\n"
         html += "        <th>Description</th>\n"
@@ -473,7 +476,7 @@ class Summary(object):
         html += "        <th>Data Purpose</th>\n"
         html += "        <th>Visibility</th>\n"
         html += "        <th>Position</th>\n"
-        html += "        <th>Formating</th>\n"
+        html += "        <th>Formatting</th>\n"
         html += "        <th>Converter GUID</th>\n"
         html += "        <th>Control GUID</th>\n"
         html += "        <th>Extended Data</th>\n"
@@ -501,6 +504,7 @@ class Summary(object):
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % column.ID
+            html += "        <td class=\"center\">%s</td>\n" % column.IsAvailable
             html += "        <td>%s</td>\n" % column_name
             html += "        <td>%s</td>\n" % column.DisplayName
             html += "        <td>%s</td>\n" % column.Description
@@ -541,6 +545,7 @@ class Summary(object):
         html += "    <thead>\n"
         html += "      <tr>\n"
         html += "        <th>ID</th>\n"
+        html += "        <th>Available</th>\n"
         html += "        <th>Connected Type</th>\n"
         html += "        <th>Display Name</th>\n"
         html += "        <th>Table Name</th>\n"
@@ -565,6 +570,7 @@ class Summary(object):
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % data_type.ID
+            html += "        <td class=\"center\">%s</td>\n" % data_type.IsAvailable
             html += "        <td><a href=\"#%s\">%s</a></td>\n" % (anchor1, data_type.Name)
             html += "        <td><a href=\"#%s\">%s</a></td>\n" % (anchor1, data_type.DisplayName)
             html += "        <td><a href=\"#%s\">%s</a></td>\n" % (anchor2, conn.TableName)
@@ -670,6 +676,7 @@ class Summary(object):
         html += "    <thead>\n"
         html += "      <tr>\n"
         html += "        <th>ID</th>\n"
+        html += "        <th>Available</th>\n"
         html += "        <th>Name</th>\n"
         html += "        <th>Display Name</th>\n"
         html += "        <th>Description</th>\n"
@@ -678,7 +685,7 @@ class Summary(object):
         html += "        <th>Data Purpose</th>\n"
         html += "        <th>Visibility</th>\n"
         html += "        <th>Position</th>\n"
-        html += "        <th>Formating</th>\n"
+        html += "        <th>Formatting</th>\n"
         html += "        <th>Control GUID</th>\n"
         html += "      </tr>\n"
         html += "    </thead>\n"
@@ -701,6 +708,7 @@ class Summary(object):
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % column.ID
+            html += "        <td class=\"center\">%s</td>\n" % column.IsAvailable
             html += "        <td>%s</td>\n" % column_name
             html += "        <td>%s</td>\n" % column.DisplayName
             html += "        <td>%s</td>\n" % column.Description

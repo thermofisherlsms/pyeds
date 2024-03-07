@@ -55,6 +55,10 @@ class DataType(Lockable):
         
         super().__init__()
         
+        # mark available types
+        self.IsAvailable = True
+        
+        # main attributes
         self.ID = None
         self.Name = None
         self.TableName = None
@@ -283,6 +287,20 @@ class DataType(Lockable):
         self._connections_by_name[connected_data_type.Name] = connection
         if connected_data_type.DisplayName:
             self._connections_by_display[connected_data_type.DisplayName] = connection
+    
+    
+    def Disable(self):
+        """Marks current data type and all columns as unavailable."""
+        
+        self.IsAvailable = False
+        
+        # mark columns
+        for column in self.Columns:
+            column.Disable()
+        
+        # mark connections
+        for connection in self.Connections:
+            connection.Disable()
     
     
     @staticmethod

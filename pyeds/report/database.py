@@ -43,7 +43,7 @@ class Database(object):
                 (if any) will be deleted.
         """
         
-        self._path = path
+        self._path = path.strip()
         self._conn = None
         self._refs = 0
         
@@ -246,6 +246,29 @@ class Database(object):
         
         # commit changes
         self._conn.commit()
+    
+    
+    def table_exists(self, table):
+        """
+        Returns True if table exists, False otherwise.
+        
+        Args:
+            table: str
+                Table name to check.
+        
+        Returns:
+            bool
+                True if table exists, False otherwise.
+        """
+        
+        # assert connection
+        self._assert_connection()
+        
+        # execute sql query
+        sql = f"SELECT count(0) FROM sqlite_master WHERE type='table' AND name='{table}'"
+        cur = self._conn.execute(sql)
+        
+        return bool(cur.fetchone()[0])
     
     
     def _assert_connection(self):

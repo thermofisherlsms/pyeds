@@ -10,4 +10,4 @@ from .enum import EnumDataType, EnumElement, EnumValue
 from .ddmap import DataDistributionMap, DataDistributionBox, DataDistributionLevel, DataDistributionValue
 from .cdtype import CustomDataType
 from .converters import *
-from .report import Report
+from .report import Report, VIEW_FILE_TAG

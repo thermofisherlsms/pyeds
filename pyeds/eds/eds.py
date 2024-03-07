@@ -2,13 +2,10 @@
 
 # import modules
 import datetime
-from ..report import Report
+from ..report import Report, VIEW_FILE_TAG
 from .entity import EntityItem
 from .prop import PropertyValue
 from .query import EDSQuery
-
-# define constants
-_VIEWFILE = "_ViewFile"
 
 
 class EDS(object):
@@ -46,9 +43,6 @@ class EDS(object):
         
         # init report file
         self._report = Report(report)
-        
-        # init view file counter
-        self._view_count = 0
     
     
     def __enter__(self):
@@ -549,7 +543,7 @@ class EDS(object):
         """Counts items of given data type."""
         
         # get columns
-        columns, names, ambiguous = self._get_columns(None, None, data_type)
+        columns, names, ambiguous = self._get_columns(None, None, data_type) if query else [], {}, False
         
         # attach view file
         needs_view = self._attach_view_file(columns)
@@ -571,7 +565,7 @@ class EDS(object):
         
         # detach view file
         if needs_view:
-            self._detach_view_file()
+            self._report.DetachViewFile()
         
         # return count
         return count
@@ -611,7 +605,7 @@ class EDS(object):
         
         # detach view file
         if needs_view:
-            self._detach_view_file()
+            self._report.DetachViewFile()
     
     
     def _read_connected(self, entity, parent, query=None, include=None, exclude=None):
@@ -664,7 +658,7 @@ class EDS(object):
         
         # detach view file
         if needs_view:
-            self._detach_view_file()
+            self._report.DetachViewFile()
     
     
     def _read_hierarchy(self, path, parent, keep=(), queries={}, includes={}, excludes={}):
@@ -772,7 +766,7 @@ class EDS(object):
         
         # detach view file
         if needs_view:
-            self._detach_view_file()
+            self._report.DetachViewFile()
     
     
     def _update_items(self, items, include):
@@ -805,7 +799,7 @@ class EDS(object):
         
         # detach view file
         if needs_view:
-            self._detach_view_file()
+            self._report.DetachViewFile()
     
     
     def _update_main_file_items(self, items, columns, data_type):
@@ -859,7 +853,7 @@ class EDS(object):
         for column in columns:
             
             # init SQL
-            sql = 'INSERT OR REPLACE INTO %s.%s_%s' % (_VIEWFILE, data_type.TableName, column)
+            sql = 'INSERT OR REPLACE INTO %s.%s_%s' % (VIEW_FILE_TAG, data_type.TableName, column)
             
             # add IDs
             ids = ", ".join('%s' % (c,) for c in id_columns)
@@ -961,6 +955,10 @@ class EDS(object):
                 # add to names by display name
                 if column.DisplayName and column.DisplayName not in names:
                     names[column.DisplayName] = name
+                
+                # skip if not available
+                if not column.IsAvailable or not source.IsAvailable:
+                    continue
                 
                 # allways add IDs
                 if column.IsIDColumn:
@@ -1072,7 +1070,7 @@ class EDS(object):
         for column in columns:
             idx += 1
             ids = " AND ".join('%s.%s = V%d.%s' % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
-            sql += ' LEFT JOIN %s.%s_%s V%d ON %s' % (_VIEWFILE, data_type.TableName, column, idx, ids)
+            sql += ' LEFT JOIN %s.%s_%s V%d ON %s' % (VIEW_FILE_TAG, data_type.TableName, column, idx, ids)
         
         return sql
     
@@ -1088,34 +1086,10 @@ class EDS(object):
         if not any(c.IsInViewFile for c in columns):
             return False
         
-        # check counter
-        if self._view_count:
-            self._view_count += 1
-            return True
-        
         # attach view file
-        sql = 'ATTACH "%s" AS %s' % (self._report.ViewFilePath, _VIEWFILE)
-        self._report.Execute(sql)
-        self._view_count += 1
+        self._report.AttachViewFile()
         
         return True
-    
-    
-    def _detach_view_file(self):
-        """Detaches the view file."""
-        
-        # check counter
-        if self._view_count <= 0:
-            self._view_count = 0
-            return
-        
-        # decrease counter
-        self._view_count -= 1
-        
-        # detach view file
-        if self._view_count == 0:
-            sql = 'DETACH %s' % _VIEWFILE
-            self._report.Execute(sql)
     
     
     def _create_properties(self, columns, names, **data):

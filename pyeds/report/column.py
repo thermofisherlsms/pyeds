@@ -91,6 +91,9 @@ class PropertyColumn(Lockable):
         # (not existing in the report)
         self.Virtual = bool(virtual)
         
+        # mark available columns
+        self.IsAvailable = True
+        
         # main attributes
         self.ID = None
         self.ColumnName = None
@@ -172,6 +175,12 @@ class PropertyColumn(Lockable):
         """
         
         return self.ExtendedData.get('StorageFileOption_StorageFile', None) == 'View'
+    
+    
+    def Disable(self):
+        """Marks current column as unavailable."""
+        
+        self.IsAvailable = False
     
     
     @staticmethod

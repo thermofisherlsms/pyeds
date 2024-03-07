@@ -41,6 +41,10 @@ class DataTypeConnection(Lockable):
         
         super().__init__()
         
+        # mark available types
+        self.IsAvailable = True
+        
+        # main attributes
         self.DataTypeID1 = None
         self.DataTypeID2 = None
         self.DataType1 = None
@@ -74,7 +78,7 @@ class DataTypeConnection(Lockable):
         """
         
         columns = (x for x in self._columns_by_name.values() if x.IsIDColumn)
-        return tuple(sorted(columns, key=lambda x:x.IDColumnOrder))
+        return tuple(sorted(columns, key=lambda x: x.IDColumnOrder))
     
     
     @property
@@ -153,6 +157,16 @@ class DataTypeConnection(Lockable):
         self._columns_by_name[column.ColumnName] = column
         if column.DisplayName:
             self._columns_by_display[column.DisplayName] = column
+    
+    
+    def Disable(self):
+        """Marks current connection and all columns as unavailable."""
+        
+        self.IsAvailable = False
+        
+        # mark columns
+        for column in self.Columns:
+            column.IsAvailable = False
     
     
     @staticmethod

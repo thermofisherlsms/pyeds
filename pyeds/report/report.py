@@ -18,6 +18,9 @@ from .workflow import Workflow, WorkflowMessage
 # initializes converters
 from .converters import CONVERTERS
 
+# define constants
+VIEW_FILE_TAG = "_ViewFileTag"
+
 
 class Report(object):
     """
@@ -57,6 +60,9 @@ class Report(object):
         
         # init database file
         self._db = Database(path)
+        
+        # init view file counter
+        self._view_file_count = 0
         
         # init buffers
         self._data_types_by_name = {}  # for .Name
@@ -357,6 +363,41 @@ class Report(object):
             shutil.copy(self.ViewFilePath, filename)
     
     
+    def AttachViewFile(self):
+        """Attaches the view file."""
+        
+        # check view file
+        if not self.HasViewFile():
+            raise IOError("Expected view file is not available! -> '%s'" % self.ViewFilePath)
+        
+        # check counter
+        if self._view_file_count:
+            self._view_file_count += 1
+            return
+        
+        # attach view file
+        sql = 'ATTACH "%s" AS %s' % (self.ViewFilePath, VIEW_FILE_TAG)
+        self.Execute(sql)
+        self._view_file_count += 1
+    
+    
+    def DetachViewFile(self):
+        """Detaches the view file."""
+        
+        # check counter
+        if self._view_file_count <= 0:
+            self._view_file_count = 0
+            return
+        
+        # decrease counter
+        self._view_file_count -= 1
+        
+        # detach view file
+        if self._view_file_count == 0:
+            sql = 'DETACH %s' % VIEW_FILE_TAG
+            self.Execute(sql)
+    
+    
     def _initialize(self):
         """Reads all data structures from current file."""
         
@@ -372,6 +413,10 @@ class Report(object):
         self._extract_data_distribution_maps()
         self._extract_data_types()
         self._extract_data_type_connections()
+        
+        # check availability
+        self._mark_unavailable_data_types()
+        self._mark_unavailable_properties()
         
         # extract workflows
         self._extract_workflows()
@@ -594,6 +639,10 @@ class Report(object):
     def _extract_workflows(self):
         """Extracts workflows."""
         
+        # check if available
+        if not self._db.table_exists("Workflows"):
+            return
+        
         # extract workflows
         cur = self._db.execute("SELECT * FROM Workflows")
         for data in cur:
@@ -636,3 +685,74 @@ class Report(object):
             
             elif column.DataPurpose in self._converters:
                 column.ValueTypeConverter = self._converters[column.DataPurpose]
+    
+    
+    def _mark_unavailable_data_types(self):
+        """Marks all data types, which are unavailable."""
+        
+        # get tables
+        cur = self._db.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = {r["name"] for r in cur.fetchall()}
+        
+        # mark missing data types
+        for dtype in self.DataTypes:
+            if dtype.TableName not in tables:
+                dtype.Disable()
+        
+        # mark missing connections
+        for conn in self.Connections:
+            if conn.TableName not in tables \
+                    or not conn.DataType1.IsAvailable \
+                    or not conn.DataType2.IsAvailable:
+                conn.Disable()
+    
+    
+    def _mark_unavailable_properties(self):
+        """Marks all properties, which are unavailable."""
+        
+        # init properties
+        main_props = {}
+        view_props = []
+        
+        # get from data types
+        for dtype in self.DataTypes:
+            main_props[dtype.TableName] = [p for p in dtype.Columns if not p.IsInViewFile]
+            view_props += [(f"{dtype.TableName}_{p.ColumnName}", p) for p in dtype.Columns if p.IsInViewFile]
+        
+        # get from connections
+        for conn in self.Connections:
+            main_props[conn.TableName] = [p for p in conn.Columns if not p.IsInViewFile]
+            view_props += [(f"{conn.TableName}_{p.ColumnName}", p) for p in conn.Columns if p.IsInViewFile]
+        
+        # mark main properties
+        for table in main_props:
+            
+            # get columns
+            cur = self._db.execute(f"SELECT * FROM pragma_table_info('{table}') as info")
+            columns = {r["name"] for r in cur.fetchall()}
+            
+            # mark missing properties
+            for prop in main_props[table]:
+                if prop.ColumnName not in columns:
+                    prop.Disable()
+        
+        # skip if no view properties
+        if not view_props:
+            return
+        
+        # mark all if view file unavailable
+        if not self.HasViewFile():
+            for table, prop in view_props:
+                prop.Disable()
+            return
+        
+        # get view file tables
+        self.AttachViewFile()
+        cur = self._db.execute(f"SELECT name FROM {VIEW_FILE_TAG}.sqlite_master WHERE type='table'")
+        tables = {r["name"] for r in cur.fetchall()}
+        self.DetachViewFile()
+        
+        # mark missing properties
+        for table, prop in view_props:
+            if table not in tables:
+                prop.Disable()
