@@ -11,10 +11,10 @@ review = pyeds.Review(eds)
 with eds, review:
     
     # read and automatically insert full hierarchy
-    path = ["ConsolidatedUnknownCompoundItem", "UnknownCompoundInstanceItem", "UnknownCompoundIonInstanceItem", "ChromatogramPeakItem", "MassSpectrumItem"]
+    path = ["ConsolidatedUnknownCompoundItem", "UnknownCompoundInstanceItem", "UnknownCompoundIonInstanceItem", "ChromatogramPeakItem", "MassSpectrumInfoItem"]
     items = eds.ReadHierarchy(path, limits={"ConsolidatedUnknownCompoundItem": 1})
     
-    hide = ["PeakModel", "Spectrum"]
+    hide = ["PeakModel"]
     review.InsertItems(items, hide=hide, hierarchy=True, header=True)
 
 # show review

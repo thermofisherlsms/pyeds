@@ -7,7 +7,7 @@ import pyeds
 with pyeds.EDS("data.cdResult") as eds:
     
     # read spectrum metadata only
-    items = eds.Read("MassSpectrumItem", exclude=["Spectrum"], limit=10)
+    items = eds.Read("MassSpectrumItem", exclude=["Spectrum"], limit=20)
     
     # filter spectra
     spectrum_ids = []

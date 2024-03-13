@@ -8,14 +8,14 @@ with pyeds.EDS("data.cdResult") as eds:
     
     # get path (be careful while using this method as it only follows the graph, not data logic)
     via = ["BestHitIonInstanceItem"]
-    path = eds.GetPath("ConsolidatedUnknownCompoundItem", "MassSpectrumItem", via)
+    path = eds.GetPath("ConsolidatedUnknownCompoundItem", "MassSpectrumInfoItem", via)
     print(path)
     
     # read selected types only
-    keep = ["ConsolidatedUnknownCompoundItem", "MassSpectrumItem"]
+    keep = ["ConsolidatedUnknownCompoundItem", "MassSpectrumInfoItem"]
     
     # read MS2 only
-    queries = {"BestHitIonInstanceItem": "BestHitType = 2", "MassSpectrumItem": "MSOrder = 2"}
+    queries = {"BestHitIonInstanceItem": "BestHitType = 2", "MassSpectrumInfoItem": "MSOrder = 2"}
     
     # read most abundant items
     orders = {"ConsolidatedUnknownCompoundItem": "MaxArea"}
@@ -31,4 +31,4 @@ with pyeds.EDS("data.cdResult") as eds:
         
         # access next type as child
         for child in item.Children:
-            print("\t%s @%.3f min" % (child.MSOrder.DisplayName, child.Spectrum.RetentionTime))
+            print("\t%s @%.3f min" % (child.MSOrder.DisplayName, child.RetentionTime))

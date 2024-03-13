@@ -26,7 +26,7 @@ with eds, review:
     
     # read compound details
     parent = compounds[1]
-    path = ["ConsolidatedUnknownCompoundItem", "UnknownCompoundInstanceItem", "UnknownCompoundIonInstanceItem", "ChromatogramPeakItem", "MassSpectrumItem"]
+    path = ["ConsolidatedUnknownCompoundItem", "UnknownCompoundInstanceItem", "UnknownCompoundIonInstanceItem", "ChromatogramPeakItem", "MassSpectrumInfoItem"]
     details = list(eds.ReadHierarchy(path, parent))
     
     # insert parent compound
@@ -60,10 +60,10 @@ with eds, review:
                             if not item3.Children:
                                 continue
                             
-                            # insert scans
+                            # insert scan info
                             with review.Section():
                                 for item4 in item3.Children:
-                                    review.InsertItem(item4, hide=["Spectrum"])
+                                    review.InsertItem(item4)
 
 # show review
 review.Show()
