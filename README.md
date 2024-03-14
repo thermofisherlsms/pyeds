@@ -53,13 +53,13 @@ import pyeds
 with pyeds.EDS("examples/data.cdResult") as eds:
     
     # define connection path and items to keep
-    path = ["Compounds", "BestHitIonInstanceItem", "MassSpectrumItem"]
-    keep = ["Compounds", "MassSpectrumItem"]
+    path = ["Compounds", "BestHitIonInstanceItem", "MassSpectrumInfoItem"]
+    keep = ["Compounds", "MassSpectrumInfoItem"]
     
     # limit spectra to MS2 only
     queries = {
         "BestHitIonInstanceItem": "BestHitType = 2",
-        "MassSpectrumItem": "MSOrder = 2"}
+        "MassSpectrumInfoItem": "MSOrder = 2"}
     
     # read 2 most abundant items only
     orders = {"Compounds": "MaxArea"}
@@ -81,9 +81,13 @@ with pyeds.EDS("examples/data.cdResult") as eds:
         # print compound properties
         print(item.Name, item.Formula, item.RetentionTime)
         
+        # get real spectrum data
+        ids = [s.IDs for s in item.Children]
+        spectra = eds.ReadMany("MassSpectrumItem", ids)
+        
         # print mass spectra
-        for child in item.Children:
-            print("\t", child.Spectrum)
+        for spectrum in spectra:
+            print("\t", spectrum.Spectrum)
 ```
 
 ### Display Tables
