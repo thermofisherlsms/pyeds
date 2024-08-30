@@ -274,7 +274,7 @@ class MassSpectrumParser(object):
             
             attr = precursor_elm.get('PercentIsolationInterference', None)
             if attr is not None and attr != "":
-                precursor.PrecursorInterference = float(attr)
+                precursor.PercentIsolationInterference = float(attr)
             
             attr = precursor_elm.get('PrecursorMassOrigin', None)
             if attr is not None and attr != "":
