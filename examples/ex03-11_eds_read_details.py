@@ -16,7 +16,7 @@ details_file = "__USE_YOU_OWN_PD_FILE__.pdResultDetails"
 with (pyeds.EDS(result_file) as result_eds,
       pyeds.EDS(details_file) as details_eds):
     
-    # read PSMs and connected spectrum i nfo
+    # read PSMs and connected spectrum info
     for psm in result_eds.ReadHierarchy(["PSMs", "MSnSpectrumInfo"], limits=5):
         print(psm.MassOverCharge, psm.Sequence, psm.XCorr)
         
