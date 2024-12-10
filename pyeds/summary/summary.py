@@ -414,6 +414,7 @@ class Summary(object):
         html += "        <th>ID</th>\n"
         html += "        <th>Available</th>\n"
         html += "        <th>Name</th>\n"
+        html += "        <th>Table</th>\n"
         html += "        <th>Display Name</th>\n"
         html += "        <th>Description</th>\n"
         html += "        <th>Visibility</th>\n"
@@ -433,6 +434,7 @@ class Summary(object):
             html += "        <td class=\"right\">%s</td>\n" % data_type.ID
             html += "        <td class=\"center\">%s</td>\n" % data_type.IsAvailable
             html += "        <td><a href=\"#%s\" %s>%s</a></td>\n" % (anchor, pop, data_type.Name)
+            html += "        <td><a href=\"#%s\" %s>%s</a></td>\n" % (anchor, pop, data_type.TableName)
             html += "        <td><a href=\"#%s\" %s>%s</a></td>\n" % (anchor, pop, data_type.DisplayName)
             html += "        <td>%s</td>\n" % data_type.Description
             html += "        <td class=\"center\">%s</td>\n" % GRID_VISIBILITY[data_type.Visibility]
