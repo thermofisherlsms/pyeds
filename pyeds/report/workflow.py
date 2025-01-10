@@ -156,6 +156,10 @@ class Workflow(Lockable):
                 Workflow node to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # add node
         self._nodes[node.ID] = node
     
     
@@ -171,6 +175,10 @@ class Workflow(Lockable):
                 Workflow message to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # add message
         self._messages.append(message)
     
     

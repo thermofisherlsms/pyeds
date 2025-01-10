@@ -197,6 +197,10 @@ class DataDistributionMap(Lockable):
                 Boxes to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # set boxes
         self._boxes = tuple(sorted(boxes, key=lambda x: x.Position))
     
     
@@ -212,6 +216,10 @@ class DataDistributionMap(Lockable):
                 Levels to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # set levels
         self._levels = tuple(sorted(levels, key=lambda x: x.Position))
     
     

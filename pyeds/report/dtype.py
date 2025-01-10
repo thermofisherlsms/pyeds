@@ -261,6 +261,10 @@ class DataType(Lockable):
                 Property column to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # add column
         self._columns_by_name[column.ColumnName] = column
         if column.DisplayName:
             self._columns_by_display[column.DisplayName] = column
@@ -277,6 +281,9 @@ class DataType(Lockable):
             connection: pyeds.DataTypeConnection
                 Data type connection to be added.
         """
+        
+        # check lock
+        self.AssertUnlocked()
         
         # get connected data type
         connected_data_type = connection.DataType2

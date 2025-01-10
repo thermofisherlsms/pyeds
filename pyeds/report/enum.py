@@ -95,6 +95,10 @@ class EnumDataType(Lockable):
                 Element to be added.
         """
         
+        # check lock
+        self.AssertUnlocked()
+        
+        # add element
         self._elements[element.Value] = element
     
     

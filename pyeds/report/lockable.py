@@ -30,6 +30,14 @@ class Lockable(object):
             raise AttributeError(message)
     
     
+    def AssertUnlocked(self):
+        """Raises exception if instance is locked."""
+        
+        if self._locked:
+            message = "%s instance is read-only! Use Unlock() first or dedicated 'set' method, but be cautious!" % self.__class__.__name__
+            raise AttributeError(message)
+    
+    
     def Locked(self):
         """Gets current state of the lock."""
         
