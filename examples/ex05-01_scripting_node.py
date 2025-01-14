@@ -61,7 +61,7 @@ formulas_table = []
 formulas_compounds_table = []
 formulas_compositions_table = []
 
-# fill tables
+# fill results tables
 formula_id = 0
 for formula in formulas:
     

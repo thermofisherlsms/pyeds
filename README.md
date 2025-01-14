@@ -7,7 +7,8 @@ internal mechanisms. Using *PyEDS*, all the hard work is done automatically, so 
 instead of how to read the data.
 
 The *PyEDS* library provides several tools to read data (*pyeds.EDS*), displaying tables metadata (*pyeds.Summary*) as
-well as displaying actual data in nicely formatted tables (*pyeds.Review*).
+well as displaying actual data in nicely formatted tables (*pyeds.Review*). In addition, a set of utilities is now
+available to simplify custom scripting nodes (*pyeds.scripting*).
 
 Please see the [examples](https://github.com/thermofisherlsms/pyeds/tree/master/examples) folder to learn more about
 available tools and functions.
