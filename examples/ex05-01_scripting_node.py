@@ -109,12 +109,14 @@ formulas_t.AddColumn("# P", pyeds.scripting.INT)
 formulas_t.AddColumn("# F", pyeds.scripting.INT)
 
 # define formula to compounds link table
+# make sure all ID columns starts with the table name followed by the ID column name
 path = os.path.join(response.WorkingDir, "formulas_compounds.txt")
 formulas_compounds_t = response.AddConnection("Formulas_Compounds", path, "Formulas", "Compounds")
 formulas_compounds_t.AddColumn("Formulas ID", pyeds.scripting.INT, pyeds.scripting.ID)
 formulas_compounds_t.AddColumn("Compounds ID", pyeds.scripting.INT, pyeds.scripting.ID)
 
 # define formula to compositions link table
+# make sure all ID columns starts with the table name followed by the ID column name
 path = os.path.join(response.WorkingDir, "formulas_compositions.txt")
 formulas_compositions_t = response.AddConnection("Formulas_Compositions", path, "Formulas", "Predicted Compositions")
 formulas_compositions_t.AddColumn("Formulas ID", pyeds.scripting.INT, pyeds.scripting.ID)
