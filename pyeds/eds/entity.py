@@ -475,3 +475,15 @@ class EntityItem(Lockable):
         
         # get specified tag
         return prop.Value.Values[index] is True
+    
+    
+    def ClearTags(self):
+        """Clears all tags."""
+        
+        # check if taggable
+        if 'Tags' not in self._names:
+            message = "'%s' is not taggable!" % (self._type.Name,)
+            raise ValueError(message)
+        
+        # reset tags
+        self.SetValue('Tags', None)
