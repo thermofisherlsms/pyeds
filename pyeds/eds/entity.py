@@ -248,6 +248,21 @@ class EntityItem(Lockable):
         return tuple(props)
     
     
+    def GetFlatChildren(self, level=1):
+        """Gets child entity items of specified level."""
+        
+        # yield current children
+        if level == 1:
+            for child in self.Children:
+                yield child
+            return
+        
+        # yield deeper children
+        for child in self.Children:
+            for item in child.GetFlatChildren(level-1):
+                yield item
+    
+    
     def SetValue(self, prop_name, value):
         """
         Sets given value to specified property.
