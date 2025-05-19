@@ -1,6 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # import modules
+from .undefined import UNDEF
 from ..report import Lockable
 
 
@@ -44,14 +45,14 @@ class PropertyValue(Lockable):
         
         self._type = property_type
         self._raw_value = value
-        self._value = self._convert_value(value)
+        self._value = UNDEF
         self._dirty = False
     
     
     def __str__(self):
         """Gets standard string representation."""
         
-        return "%s(%s)" % (self._type, self._value)
+        return "%s(%s)" % (self._type, self.Value)
     
     
     def __repr__(self):
@@ -102,6 +103,10 @@ class PropertyValue(Lockable):
                 Property value.
         """
         
+        # convert value if needed
+        if self._value is UNDEF:
+            self._value = self._convert_value(self.RawValue)
+        
         return self._value
     
     
@@ -146,7 +151,7 @@ class PropertyValue(Lockable):
         value = self._create_value(value)
         
         # skip if same
-        if value == self._value:
+        if value == self.Value:
             return
         
         # convert to raw value
