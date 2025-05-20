@@ -747,11 +747,10 @@ class EDS(object):
         if needs_view:
             sql = self._sql_view_file_select(sql, columns, data_type)
         
-        # add IDs
-        buff = []
-        for column in data_type.IDColumns:
-            buff.append('%s = ?' % names[column.ColumnName])
-        sql += ' WHERE (%s)' % (' AND '.join(buff))
+        # add IDs to SQL
+        id_cols = [names[c.ColumnName] for c in data_type.IDColumns]
+        id_cond = ['%s = ?' % c for c in id_cols]
+        sql += ' WHERE (%s)' % (' AND '.join(id_cond))
         
         # read items
         for values in ids:
