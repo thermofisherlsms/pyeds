@@ -13,19 +13,36 @@ FORMAT_FLOAT_H = re.compile("^0\.(#+)$")
 
 def rgba_from_argb_int(color):
     """
-    Converts ARGB int into RGBA tuple.
+    Converts ARGB int into RGBAr tuple, where RGB are 0-255 and A is 0-1.
     
     Returns:
         (int, int, int, int)
             Red, green, blue and alpha channels.
     """
     
-    a = ((color >> 24) & 0xFF) / 255.
+    a = (color >> 24) & 0xFF
     r = (color >> 16) & 0xFF
     g = (color >> 8) & 0xFF
     b = color & 0xFF
     
-    return r, g, b, a
+    return r, g, b, a / 255.
+
+
+def argb_int_from_rgba(r, g, b, a):
+    """
+    Converts RGBA values, where RGBA are 0-255 into ARGB int.
+    
+    Returns:
+        int
+            ARGB int.
+    """
+    
+    a = a << 24
+    r = r << 16
+    g = g << 8
+    b = b
+    
+    return r | g | b | a - 4294967296
 
 
 def trans_color(color, alpha):
