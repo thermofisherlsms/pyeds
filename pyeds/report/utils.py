@@ -20,6 +20,8 @@ def rgba_from_argb_int(color):
             Red, green, blue and alpha channels.
     """
     
+    color = int(color)
+    
     a = (color >> 24) & 0xFF
     r = (color >> 16) & 0xFF
     g = (color >> 8) & 0xFF
@@ -37,10 +39,10 @@ def argb_int_from_rgba(r, g, b, a):
             ARGB int.
     """
     
-    a = a << 24
-    r = r << 16
-    g = g << 8
-    b = b
+    a = int(a) << 24
+    r = int(r) << 16
+    g = int(g) << 8
+    b = int(b)
     
     return r | g | b | a - 4294967296
 

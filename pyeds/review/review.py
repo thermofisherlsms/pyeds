@@ -1,12 +1,12 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # import modules
+import re
 import os.path
 import shutil
 import uuid
 import webbrowser
 from xml.sax.saxutils import escape
-from .helpers import *
 from ..eds import EDS
 from .converters import CONVERTERS, ImageValueConverter
 

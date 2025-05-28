@@ -6,7 +6,7 @@ import shutil
 import random
 import webbrowser
 from ..eds import *
-from ..review.helpers import *
+from ..report import utils
 
 # define constants
 GRID_VISIBILITY = {0: 'none', 1: 'hidden', 4: 'visible'}
@@ -966,7 +966,7 @@ class Summary(object):
         
         # add items
         for box in sorted(boxes, key=lambda x: x.Position):
-            color = "rgba(%d,%d,%d,%.2f)" % (rgba_from_argb_int(box.Color))
+            color = "rgba(%d,%d,%d,%.2f)" % (utils.rgba_from_argb_int(box.Color))
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % box.ID
@@ -1018,7 +1018,7 @@ class Summary(object):
         
         # add items
         for level in sorted(levels, key=lambda x: x.Position):
-            color = "rgba(%d,%d,%d,%.2f)" % (rgba_from_argb_int(level.Color))
+            color = "rgba(%d,%d,%d,%.2f)" % (utils.rgba_from_argb_int(level.Color))
             
             html += "      <tr>\n"
             html += "        <td class=\"right\">%s</td>\n" % level.ID

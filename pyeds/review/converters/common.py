@@ -3,7 +3,7 @@
 # import modules
 import numpy
 from xml.sax.saxutils import escape
-from ..helpers import *
+from ...report import utils
 from .converter import register, StringValueConverter
 
 
@@ -73,7 +73,7 @@ class TagsConverter(StringValueConverter):
             value = prop.Value[box.Index] if prop.Value is not None else None
             
             # get color
-            color = rgba_from_argb_int(box.Color) if value else self.NONE_COLOR
+            color = utils.rgba_from_argb_int(box.Color) if value else self.NONE_COLOR
             color = "rgba(%s,%s,%s,%s);" % color
             
             # add to HTML
@@ -116,7 +116,7 @@ class NumberConverter(StringValueConverter):
         
         # apply formatting
         if prop.Type.FormatString:
-            return format_float(prop.Value, prop.Type.FormatString)
+            return utils.format_float(prop.Value, prop.Type.FormatString)
         
         return str(prop.Value)
 
@@ -241,7 +241,7 @@ class StatusEnumConverter(EnumConverter):
         # set style
         style = ""
         if color:
-            color = trans_color(color, alpha=.75)
+            color = utils.trans_color(color, alpha=.75)
             style = "background-color: rgba(%s,%s,%s,%s);" % color
         
         # make HTML
@@ -330,7 +330,7 @@ class DDMapConverter(StringValueConverter):
         # format float
         if prop.Value.Type.CustomDataType.Name == "Double":
             formatting = prop.Type.FormatString
-            value = format_float(value, formatting)
+            value = utils.format_float(value, formatting)
         
         return str(value)
     
@@ -359,7 +359,7 @@ class DDMapConverter(StringValueConverter):
         # set color
         color = self.GetBoxColor(prop, index)
         if color:
-            color = trans_color(color, alpha=.75)
+            color = utils.trans_color(color, alpha=.75)
             style += " background-color: rgba(%s,%s,%s,%s);" % color
         
         return style
@@ -381,7 +381,7 @@ class DDMapConverter(StringValueConverter):
         
         # convert to RGBA
         if color:
-            color = rgba_from_argb_int(color)
+            color = utils.rgba_from_argb_int(color)
         
         return color
 

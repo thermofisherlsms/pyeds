@@ -6,7 +6,6 @@ import os.path
 import tempfile
 import uuid
 from xml.sax.saxutils import escape
-from ..helpers import *
 from .converter import register, StringValueConverter, ImageValueConverter
 from .common import NumberConverter, DDMapConverter, StatusEnumConverter
 

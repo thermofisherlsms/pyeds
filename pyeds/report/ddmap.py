@@ -430,7 +430,7 @@ class DataDistributionBox(Lockable):
         
         Color: int or None
             Attached color. To convert stored value into RGBA tuple use the
-            'pyeds.review.rgba_from_argb_int' function.
+            'pyeds.report.utils.rgba_from_argb_int' function.
         
         ExtendedData: {str:str}
             Extended data values.
@@ -539,7 +539,7 @@ class DataDistributionLevel(Lockable):
         
         Color: int or None
             Attached color. To convert stored value into RGBA tuple use the
-            'pyeds.review.rgba_from_argb_int' function.
+            'pyeds.report.utils.rgba_from_argb_int' function.
     """
     
     
