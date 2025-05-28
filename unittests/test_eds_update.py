@@ -14,6 +14,30 @@ class TestCase(unittest.TestCase):
         self.result_file = "../examples/data.cdResult"
     
     
+    def test_property_edit(self):
+        """Tests whether editing is blocked."""
+        
+        # get items
+        with pyeds.EDS(self.result_file) as eds:
+            items = list(eds.Read("ConsolidatedUnknownCompoundItem", limit=1))
+            item = items[0]
+        
+        # check tag edit
+        item.Tag(0, True)
+        self.assertTrue(item.Tags[0])
+        
+        # check checkbox edit
+        item.Check(True)
+        self.assertTrue(item.Checked)
+        
+        # set value directly
+        item.SetValue('Tags', None)
+        
+        # check blocked edit
+        with self.assertRaises(AttributeError):
+            item.SetValue('RetentionTime', 0)
+    
+    
     def test_update(self):
         """Tests whether Update works correctly."""
         
