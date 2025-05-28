@@ -278,6 +278,11 @@ class EntityItem(Lockable):
         # get property
         prop = self.GetProperty(prop_name)
         
+        # check if editable
+        if not prop.IsEditable:
+            message = "Property '%s' is not marked as editable!" % prop_name
+            raise AttributeError(message)
+        
         # set value to property
         prop.Unlock()
         prop.SetValue(value)
@@ -386,6 +391,7 @@ class EntityItem(Lockable):
         
         # init column definition
         column = PropertyColumn(virtual=True)
+        column.AllowEdit = True
         column.ColumnName = name
         column.DisplayName = name
         column.FormatString = template

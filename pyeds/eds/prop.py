@@ -136,6 +136,19 @@ class PropertyValue(Lockable):
         return self._dirty
     
     
+    @property
+    def IsEditable(self):
+        """
+        Gets value indicating whether property is allowed to be changed.
+        
+        Returns:
+            bool:
+                Editable state.
+        """
+        
+        return bool(self._type.AllowEdit)
+    
+    
     def SetValue(self, value):
         """
         Sets given value to property.
