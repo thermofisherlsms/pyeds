@@ -3,6 +3,7 @@
 # import modules
 import datetime
 from ..report import Report, VIEW_FILE_TAG
+from ..report import utils
 from .entity import EntityItem
 from .prop import PropertyValue
 from .query import EDSQuery
@@ -487,6 +488,50 @@ class EDS(object):
                     prop.Dirty(False)
     
     
+    def UpdateTagSettings(self, index, name=None, description=None, color=None, visible=None, persist=True):
+        """
+        Updates given properties of specified tag bullet.
+        
+        If changes should be persisted, be sure to back up your original results
+        before making any changes! You can use the pero.EDS.Report.Backup
+        method.
+        
+        Args:
+            index: int
+                Index of the tag bullet to update.
+            
+            name: str or None
+                New display name to be set. If set to None, no changes will be
+                made.
+            
+            description: str or None
+                New description to be set. If set to None, no changes will be
+                made.
+            
+            color: (int, int, int, int) or None
+                New color to be set. If set to None, no changes will be made.
+                Color should be specified as RGBA integers in range of 0-255
+                each.
+            
+            visible: bool or None
+                New visibility to be set. If set to None, no changes will be
+                made.
+            
+            persist: bool
+                Specifies whether applied changes should be persisted to result
+                database.
+        """
+        
+        # update tag settings
+        self._update_tag_settings(
+            index = index,
+            name = name,
+            description = description,
+            color = color,
+            visible = visible,
+            persist = persist)
+    
+    
     def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=None):
         """Finds paths between two data types."""
         
@@ -897,6 +942,84 @@ class EDS(object):
         
         # execute query
         self._report.ExecuteMany(sql, values)
+    
+    
+    def _update_tag_settings(self, index, name=None, description=None, color=None, visible=None, persist=True):
+        """Updates specified tag box settings."""
+        
+        # get tag ddmap
+        tag_ddmap = None
+        for ddmap in self._report.DataDistributionMaps:
+            if ddmap.SemanticTerms == "ResultItemDataPurpose/Tags":
+                tag_ddmap = ddmap
+                break
+        
+        # check if available
+        if tag_ddmap is None:
+            raise ValueError("No tags found!")
+        
+        # get box
+        tag_box = tag_ddmap.GetBox(index)
+        
+        # unlock box
+        tag_box.Unlock()
+        
+        # set name
+        if name is not None:
+            tag_box.Name = str(name)
+        
+        # set description
+        if description is not None:
+            tag_box.Description = str(description)
+        
+        # set color
+        if color is not None:
+            r, g, b, a = color if len(color) == 4 else (*color, 255)
+            tag_box.Color = utils.argb_int_from_rgba(r, g, b, a)
+        
+        # set visibility
+        if visible is not None:
+            tag_box.ExtendedData['EntityItemTagVisibility'] = str(bool(visible))
+        
+        # lock box
+        tag_box.Lock()
+        
+        # check if should be persisted
+        if not persist:
+            return
+        
+        # make SQL for box update
+        sql = '''UPDATE DataDistributionBoxes SET
+            Name = ?,
+            Description = ?,
+            Color = ?
+            WHERE BoxID = ? AND DataDistributionMapID = ?'''
+        
+        values = (
+            tag_box.Name,
+            tag_box.Description,
+            tag_box.Color,
+            tag_box.ID,
+            tag_box.MapID)
+        
+        # execute query
+        self._report.Execute(sql, values)
+        
+        # make SQL for visibility update
+        sql = '''UPDATE DataDistributionBoxExtendedData SET
+            ValueString = ?
+            WHERE BoxID = ? AND Name = ?'''
+        
+        values = (
+            tag_box.ExtendedData['EntityItemTagVisibility'],
+            tag_box.ID,
+            'EntityItemTagVisibility')
+        
+        # execute query
+        self._report.Execute(sql, values)
+        
+        # commit changes
+        self._report.Commit()
     
     
     def _get_query(self, query, order, desc, limit, offset):
