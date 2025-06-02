@@ -168,7 +168,6 @@ class Response(Lockable):
         data = {'Tables': []}
         
         # add tables
-        data['Tables'] = []
         for tbl in self._tables:
             table = tbl.ToJSON()
             if table:
@@ -177,9 +176,22 @@ class Response(Lockable):
         return data
     
     
-    def Save(self):
-        """Saves node response as JSON file."""
+    def Export(self):
+        """Saves node response definition and table data."""
         
-        # write to file
+        self.ExportResponse()
+        self.ExportTables()
+    
+    
+    def ExportResponse(self):
+        """Saves node response definition."""
+        
         with open(self.Path, 'w', encoding='utf-8') as wf:
             json.dump(self.ToJSON(), wf, ensure_ascii=False, indent=4)
+    
+    
+    def ExportTables(self):
+        """Saves all table data."""
+        
+        for table in self._tables:
+            table.Export()

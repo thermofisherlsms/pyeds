@@ -90,6 +90,7 @@ class Table(Lockable):
         
         # init containers
         self._columns = []
+        self._values = []
     
     
     @property
@@ -207,6 +208,18 @@ class Table(Lockable):
         return column
     
     
+    def AddRowData(self, *values):
+        """Adds all columns data for single row."""
+        
+        # check size
+        if len(values) != len(self._columns):
+            message = "Number of values and number of columns must be equal!"
+            raise ValueError(message)
+        
+        # add values
+        self._values.append(tuple(values))
+    
+    
     def ToJSON(self):
         """
         Converts current data to JSON-like object.
@@ -241,6 +254,26 @@ class Table(Lockable):
                 data['ColumnDescriptions'].append(column)
         
         return data
+    
+    
+    def ToCSV(self):
+        """
+        Formats table values into tab-separated values.
+        
+        Returns:
+            str
+        """
+        
+        lines = ("\t".join(map(str, v)) for v in self._values)
+        return "\n".join(lines)
+    
+    
+    def Export(self):
+        """Saves table data as tab-separated file."""
+        
+        with open(self.DataFile, 'w', encoding='utf-8') as wf:
+            wf.write(self.Header+"\n")
+            wf.write(self.ToCSV())
 
 
 class TableOptions(Lockable):
