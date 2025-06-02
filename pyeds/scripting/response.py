@@ -3,6 +3,7 @@
 # import modules
 import os.path
 import json
+import re
 from .enums import *
 from .table import Table
 from ..report import Lockable
@@ -71,17 +72,17 @@ class Response(Lockable):
         raise KeyError(message)
     
     
-    def AddTable(self, table_name, data_file):
+    def AddTable(self, table_name):
         """
         Adds new table definition to node response.
         
         Args:
             table_name: str
                 Specifies the table display name.
-            
-            data_file: str
-                Specifies the full path to related text file containing actual
-                columns values.
+        
+        Returns:
+            pyeds.scripting.Table
+                Initialized table definition.
         """
         
         # check lock
@@ -92,6 +93,10 @@ class Response(Lockable):
             if tbl.TableName == table_name:
                 message = "Table with the same name already exists! --> '%s'" % table_name
                 raise KeyError(message)
+        
+        # init path
+        data_file = re.sub(INVALID_CHARS, "_", table_name).rstrip(". ")[:255]
+        data_file = os.path.join(self.WorkingDir, f"{data_file}.txt")
         
         # create table
         table = Table(
@@ -105,7 +110,7 @@ class Response(Lockable):
         return table
     
     
-    def AddConnection(self, table_name, data_file, first_table, second_table):
+    def AddConnection(self, table_name, first_table, second_table):
         """
         Adds new table definition to node response.
         
@@ -113,15 +118,15 @@ class Response(Lockable):
             table_name: str
                 Specifies the table display name.
             
-            data_file: str
-                Specifies the full path to related text file containing actual
-                columns values.
-            
             first_table: str
                 Specifies the display name of the first table to be connected.
             
             second_table: str
                 Specifies the display name of the second table to be connected.
+        
+        Returns:
+            pyeds.scripting.Table
+                Initialized table definition.
         """
         
         # check lock
@@ -132,6 +137,10 @@ class Response(Lockable):
             if tbl.TableName == table_name:
                 message = "Table with the same name already exists! --> '%s'" % table_name
                 raise KeyError(message)
+        
+        # init path
+        data_file = re.sub(INVALID_CHARS, "_", table_name).rstrip(". ")[:255]
+        data_file = os.path.join(self.WorkingDir, f"{data_file}.txt")
         
         # create table
         table = Table(
@@ -149,14 +158,14 @@ class Response(Lockable):
     
     def ToJSON(self):
         """
-        Converts current data to JSON-like object.
+        Converts response definition to JSON-like object.
         
         Returns:
             {}
         """
         
         # init data
-        data = {}
+        data = {'Tables': []}
         
         # add tables
         data['Tables'] = []

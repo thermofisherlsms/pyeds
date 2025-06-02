@@ -1,5 +1,8 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
+# define illegal characters
+INVALID_CHARS = r'[\\\/:\*\?"<>\|\x00-\x1F]'
+
 # define enums
 CSV = 'CSV'
 CSV_CONN = 'CSVConnectionTable'
