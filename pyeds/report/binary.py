@@ -9,7 +9,7 @@ from io import BytesIO
 class Binary(object):
     """
     The pyeds.Binary class is used to hold the actual binary data retrieved by
-    retrieved by pyeds.EDS reader. The actual value can be accessed via 'Value'
+    pyeds.EDS reader. The actual value can be accessed via 'Value'
     property.
     
     Since most of the binary data are compressed, this class provides
@@ -72,6 +72,69 @@ class Binary(object):
         
         # use zlib
         elif self._value:
-            data = zlib.decompress(self._value, wbits=32 + zlib.MAX_WBITS)
+            data = zlib.decompress(self._value, wbits=32+zlib.MAX_WBITS)
             if data:
                 return data.decode("utf-8")
+        
+        return None
+    
+    
+    @staticmethod
+    def Zip(value):
+        """
+        Gets zipped version of given data using zlib.
+        
+        Args:
+            value: ?
+                Native value to zip.
+        
+        Returns:
+            ?
+                Compressed value.
+        """
+        
+        # check value
+        if value is None:
+            return None
+        
+        # encode string
+        if isinstance(value, str):
+            value = value.encode('utf-8')
+        
+        # using compress
+        return zlib.compress(value)
+    
+    
+    @staticmethod
+    def ZipFile(value, filename="cfile"):
+        """
+        Gets zipped version of given data using zipfile.
+        
+        Args:
+            value: ?
+                Native value to zip.
+            
+            filename: str
+                Zipped file name.
+        
+        Returns:
+            ?
+                Compressed value.
+        """
+        
+        # check value
+        if value is None:
+            return None
+        
+        # init buffer
+        buff = BytesIO()
+        
+        # compress to file
+        with zipfile.ZipFile(buff, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            zipf.writestr(filename, value)
+        
+        # get value and close
+        compressed = buff.getvalue()
+        buff.close()
+        
+        return compressed

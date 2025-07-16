@@ -3,6 +3,7 @@
 # import modules
 import re
 from .converter import register, ValueConverter
+from ..binary import Binary
 
 # define constants
 MOL_PATTERN = re.compile("(?:^(?:(?:\d| ){3}){11}.{0,6}){1}[\s\S]*", re.M)
@@ -40,3 +41,27 @@ class MolStructureConverter(ValueConverter):
         
         # filter MOL string
         return "\n\n\n%s" % MOL_PATTERN.search(mol).group(0)
+    
+    
+    def Revert(self, value):
+        """
+        Reverts MOL string back to Binary.
+        
+        Args:
+            value: str
+                MOL string.
+        
+        Returns:
+            pyeds.Binary
+                MOL string compressed into Binary.
+        """
+        
+        # check value
+        if not value:
+            return None
+        
+        # compress MOL string
+        compressed = Binary.Zip(value)
+        
+        # create binary
+        return Binary(compressed)

@@ -64,7 +64,7 @@ class ValueConverter(object):
                 Value converted into original database type.
         """
         
-        raise NotImplementedError()
+        return value
     
     
     def Create(self, value):
@@ -80,4 +80,4 @@ class ValueConverter(object):
                 Final property value.
         """
         
-        raise NotImplementedError()
+        return value
