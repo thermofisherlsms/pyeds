@@ -191,11 +191,9 @@ class MOLStructureConverter(ImageValueConverter):
         path = os.path.join(tempfile.gettempdir(), filename)
         
         # set drawing options
-        options = Draw.DrawingOptions()
-        options.bgColor = None
-        options.defaultColor = (0, 0, 0)
-        options.colorBonds = False
-        options.coordScale = 1.0
+        options = Draw.MolDrawOptions()
+        options.baseFontSize = 0.5
+        options.bondLineWidth = 1
         
         # make image
         Draw.MolToFile(mol, path, size=(120, 75), options=options, fitImage=False, ignoreHs=True)
