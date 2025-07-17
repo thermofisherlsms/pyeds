@@ -34,6 +34,11 @@ class MolStructureConverter(ValueConverter):
         if not value:
             return None
         
+        # check type
+        if not isinstance(value, Binary):
+            message = "Value must be of type pyeds.Binary! -> %s" % (type(value))
+            raise TypeError(message)
+        
         # unzip MOL string
         mol = value.Unzip()
         if not mol:
@@ -59,6 +64,11 @@ class MolStructureConverter(ValueConverter):
         # check value
         if not value:
             return None
+        
+        # check type
+        if not isinstance(value, str):
+            message = "Value must be of type str! -> %s" % (type(value))
+            raise TypeError(message)
         
         # compress MOL string
         compressed = Binary.Zip(value)
