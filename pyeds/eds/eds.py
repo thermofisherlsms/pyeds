@@ -446,33 +446,8 @@ class EDS(object):
         if not items:
             return
         
-        # get data type
-        data_type = items[0].Type
-        
-        # check same entity
-        if any(d.Type.ID != data_type.ID for d in items):
-            raise ValueError("All items must be of the same entity!")
-        
-        # check if view file exists
-        view_available = self._report.HasViewFile()
-        
-        # retrieve all dirty properties
-        if properties is None:
-            props = (prop for item in items for prop in item.GetProperties())
-            props = (prop for prop in props if (prop.IsDirty and not prop.Type.Virtual))
-            properties = set(prop.Type.ColumnName for prop in props)
-        
-        # check properties
-        for prop in properties:
-            
-            if not data_type.HasColumn(prop):
-                raise ValueError("Unknown properties cannot be saved! -> '%s'" % (prop,))
-            
-            if data_type.GetColumn(prop).Virtual:
-                raise ValueError("Custom properties cannot be saved! -> '%s'" % (prop,))
-            
-            if data_type.GetColumn(prop).IsInViewFile and not view_available:
-                raise ValueError("View file properties cannot be saved! Missing view file. -> '%s'" % (prop,))
+        # check items and get properties to update
+        properties = self._check_items_to_update(items, properties)
         
         # no properties
         if not properties:
@@ -842,7 +817,7 @@ class EDS(object):
             self._update_view_file_items(items, columns, data_type)
         
         # log change
-        self._update_last_change("DataTypesColumns", columns)
+        self._update_columns_last_change(columns)
         
         # commit changes
         self._report.Commit()
@@ -921,7 +896,29 @@ class EDS(object):
             self._report.ExecuteMany(sql, values)
     
     
-    def _update_last_change(self, table_name, columns):
+    def _update_table_last_change(self, data_type):
+        """Updates last change time stamp for given table."""
+        
+        # get current time stamp
+        stamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep=" ")
+        stamp = stamp.replace('+00:00', 'Z')
+        
+        # update data type
+        data_type.Unlock()
+        data_type.LastChange = stamp
+        data_type.Lock()
+        
+        # make query
+        sql = 'UPDATE DataTypes SET LastChange = ? WHERE DataTypeID = ?'
+        
+        # get values
+        values = (data_type.LastChange, data_type.ID)
+        
+        # execute query
+        self._report.Execute(sql, values)
+    
+    
+    def _update_columns_last_change(self, columns):
         """Updates last change time stamp for given columns."""
         
         # get current time stamp
@@ -935,7 +932,7 @@ class EDS(object):
             col.Lock()
         
         # make query
-        sql = 'UPDATE %s SET LastChange = ? WHERE ColumnId = ?' % (table_name, )
+        sql = 'UPDATE DataTypesColumns SET LastChange = ? WHERE ColumnId = ?'
         
         # get values
         values = [(c.LastChange, c.ID) for c in columns]
@@ -1020,6 +1017,104 @@ class EDS(object):
         
         # commit changes
         self._report.Commit()
+    
+    
+    def _insert(self, items):
+        """
+        Inserts given items.
+        
+        Be sure to back up your original results before making any changes! You
+        can use the pero.EDS.Report.Backup method. All changes are saved
+        immediately.
+        
+        Note, that all items must be of the same entity type and all IDs set.
+        Connection properties and newly added properties cannot be inserted.
+        
+        Args:
+            items: (pyeds.EntityItem,)
+                Items to insert.
+        """
+        
+        # check items
+        if not items:
+            return
+        
+        # check items and get properties to set
+        properties = self._check_items_to_update(items)
+        
+        # no properties
+        if not properties:
+            return
+        
+        # insert items
+        self._insert_items(items, properties)
+        
+        # remove dirty flag
+        for item in items:
+            for prop in item.GetProperties():
+                if prop.Type.ColumnName in properties or prop.Type.DisplayName in properties:
+                    prop.Dirty(False)
+    
+    
+    def _insert_items(self, items, include):
+        """Inserts given items."""
+        
+        # get data type
+        data_type = self._report.GetDataType(items[0].Type.Name)
+        
+        # get IDs
+        id_columns = [c for c in data_type.IDColumns]
+        
+        # get columns
+        columns, names, ambiguous = self._get_columns(include, id_columns, data_type)
+        
+        # attach view file
+        needs_view = self._attach_view_file(columns)
+        
+        # update main file
+        self._insert_main_file_items(items, columns, data_type)
+        
+        # update view file
+        if needs_view:
+            self._update_view_file_items(items, columns, data_type)
+        
+        # log change
+        self._update_table_last_change(data_type)
+        
+        # commit changes
+        self._report.Commit()
+        
+        # detach view file
+        if needs_view:
+            self._report.DetachViewFile()
+    
+    
+    def _insert_main_file_items(self, items, columns, data_type):
+        """Insert items into main file."""
+        
+        # get columns
+        columns = [c.ColumnName for c in columns if not c.IsInViewFile]
+        
+        # skip if not needed
+        if not columns:
+            return
+        
+        # get columns
+        cols = ", ".join(columns)
+        
+        # get values placeholder
+        places = ", ".join(["?"] * (len(columns)))
+        
+        # make SQL
+        sql = 'INSERT INTO %s (%s) VALUES (%s)' % (data_type.TableName, cols, places)
+        
+        # set values
+        values = []
+        for i, item in enumerate(items):
+            values.append([item.GetProperty(c).RawValue for c in columns])
+        
+        # execute query
+        self._report.ExecuteMany(sql, values)
     
     
     def _get_query(self, query, order, desc, limit, offset):
@@ -1128,6 +1223,55 @@ class EDS(object):
         return converted
     
     
+    def _check_items_to_update(self, items, properties=None):
+        """Checks if given items are valid to be updated or inserted."""
+        
+        # get data type
+        data_type = items[0].Type
+        
+        # check same entity
+        if any(d.Type.ID != data_type.ID for d in items):
+            raise ValueError("All items must be of the same entity!")
+        
+        # check if view file exists
+        view_available = self._report.HasViewFile()
+        
+        # retrieve all dirty properties
+        if properties is None:
+            props = (prop for item in items for prop in item.GetProperties())
+            props = (prop for prop in props if (prop.IsDirty and not prop.Type.Virtual))
+            properties = set(prop.Type.ColumnName for prop in props)
+        
+        # check properties
+        for prop in properties:
+            
+            if not data_type.HasColumn(prop):
+                raise ValueError("Unknown properties cannot be saved! -> '%s'" % (prop,))
+            
+            if data_type.GetColumn(prop).Virtual:
+                raise ValueError("Custom properties cannot be saved! -> '%s'" % (prop,))
+            
+            if data_type.GetColumn(prop).IsInViewFile and not view_available:
+                raise ValueError("View file properties cannot be saved! Missing view file. -> '%s'" % (prop,))
+        
+        # check IDs
+        ids = set()
+        id_names = [c.ColumnName for c in data_type.IDColumns]
+        for item in items:
+            
+            # check if IDs set
+            for name in id_names:
+                if item[name] is None:
+                    raise ValueError("IDs must be set for all items! -> '%s'" % (name,))
+            
+            # check if IDs unique
+            if item.IDs in ids:
+                raise ValueError("IDs must be unique for all items!")
+            ids.add(item.IDs)
+        
+        return properties
+    
+    
     def _sql_main_file_select(self, columns, data_type, names):
         """Initializes selection SQL query from data type and requested columns."""
         
@@ -1218,6 +1362,28 @@ class EDS(object):
         self._report.AttachViewFile()
         
         return True
+    
+    
+    def _init_entity_item(self, entity):
+        """Initializes a new entity item."""
+        
+        # get data type
+        data_type = self._report.GetDataType(entity)
+        
+        # init item
+        item = EntityItem(data_type)
+        
+        # create properties
+        properties = []
+        for column in data_type.Columns:
+            prop = PropertyValue(column, column.DefaultValue)
+            properties.append(prop)
+        
+        # set properties
+        item.SetProperties(properties)
+        item.Lock()
+        
+        return item
     
     
     def _create_properties(self, columns, names, **data):
