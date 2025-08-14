@@ -50,7 +50,6 @@ class EntityItem(Lockable):
         self._properties = []
         self._names = {}
         self._children = []
-        self._ids = ()
     
     
     def __getattr__(self, attr):
@@ -163,7 +162,7 @@ class EntityItem(Lockable):
                 Item IDs.
         """
         
-        return self._ids
+        return tuple(self.GetValue(c.ColumnName) for c in self._type.IDColumns)
     
     
     def GetValue(self, prop_name, default=None, silent=True):
@@ -313,9 +312,6 @@ class EntityItem(Lockable):
         for i, prop in enumerate(self._properties):
             if prop.Type.DisplayName and prop.Type.DisplayName not in self._names:
                 self._names[prop.Type.DisplayName] = i
-        
-        # reset IDs
-        self._ids = tuple(self.GetValue(c.ColumnName) for c in self._type.IDColumns)
     
     
     def HasProperty(self, prop_name):

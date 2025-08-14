@@ -124,6 +124,19 @@ class PropertyValue(Lockable):
     
     
     @property
+    def IsID(self):
+        """
+        Gets the value indicating if this property is used as ID.
+        
+        Returns:
+            bool
+                True if this is ID property, False otherwise.
+        """
+        
+        return self._type.IsIDColumn
+    
+    
+    @property
     def IsDirty(self):
         """
         Gets property dirty flag.
