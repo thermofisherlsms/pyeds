@@ -347,7 +347,16 @@ class Report(object):
     
     
     def Backup(self, result=True, view=True):
-        """Creates database backup."""
+        """
+        Creates database backup.
+        
+        Args:
+            result: bool
+                If set to True, result file backup will be created.
+            
+            view: bool
+                If set to True, view file backup will be created.
+        """
         
         # get time stamp
         stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d_%H-%M-%S')

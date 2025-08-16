@@ -421,6 +421,21 @@ class EDS(object):
             exclude = exclude)
     
     
+    def Backup(self, result=True, view=True):
+        """
+        Creates database backup.
+        
+        Args:
+            result: bool
+                If set to True, result file backup will be created.
+            
+            view: bool
+                If set to True, view file backup will be created.
+        """
+        
+        self._report.Backup(result, view)
+    
+    
     def Update(self, items, properties=None):
         """
         Updates specified properties of given items.
