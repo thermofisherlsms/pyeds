@@ -52,7 +52,8 @@ class EnumDataType(Lockable):
         self.CVTermName = None
         self.CVTermDefinition = None
         
-        self._elements = {}  # for .Value
+        self._elements_by_value = {}
+        self._elements_by_name = {}
     
     
     def __str__(self):
@@ -80,7 +81,7 @@ class EnumDataType(Lockable):
                 Available elements.
         """
         
-        return tuple(self._elements.values())
+        return tuple(self._elements_by_value.values())
     
     
     def AddElement(self, element):
@@ -99,7 +100,8 @@ class EnumDataType(Lockable):
         self.AssertUnlocked()
         
         # add element
-        self._elements[element.Value] = element
+        self._elements_by_value[element.Value] = element
+        self._elements_by_name[element.DisplayName] = element
     
     
     def GetElement(self, value):
@@ -115,11 +117,17 @@ class EnumDataType(Lockable):
                 Enum element definition.
         """
         
-        if value not in self._elements:
-            message = "'%s' doesn't contain value '%s'!" % (self.TypeName, value)
-            raise KeyError(message)
+        # check value
+        if value in self._elements_by_value:
+            return self._elements_by_value[value]
         
-        return self._elements[value]
+        # check display name
+        if value in self._elements_by_name:
+            return self._elements_by_name[value]
+        
+        # raise error
+        message = "'%s' doesn't contain value '%s'!" % (self.TypeName, value)
+        raise KeyError(message)
     
     
     def GetElements(self, value):
@@ -140,8 +148,8 @@ class EnumDataType(Lockable):
         elements = []
         
         # direct match
-        if value in self._elements:
-            elements.append(self._elements[value])
+        if value in self._elements_by_value:
+            elements.append(self._elements_by_value[value])
         
         # check zero
         elif value == 0:
@@ -153,9 +161,9 @@ class EnumDataType(Lockable):
         
         # get elements
         else:
-            for el in self._elements:
+            for el in self._elements_by_value:
                 if el != 0 and (value & el) == el:
-                    elements.append(self._elements[el])
+                    elements.append(self._elements_by_value[el])
         
         return tuple(elements)
     
@@ -478,6 +486,9 @@ class EnumValue(Lockable):
         if isinstance(other, int):
             return self.Value == other
         
+        if isinstance(other, str):
+            return self.DisplayName == other
+        
         if isinstance(other, EnumElement):
             return self.Value == other.Value
         
@@ -575,9 +586,13 @@ class EnumValue(Lockable):
         if not self.IsFlagsEnum:
             return False
         
-        # get int value
+        # get int value from enum
         if isinstance(value, (EnumValue, EnumElement)):
             value = value.Value
+        
+        # get int value from display name
+        elif isinstance(value, str):
+            value = self._type.GetElement(value).Value
         
         # check zeros
         if self._value == 0 or value == 0:

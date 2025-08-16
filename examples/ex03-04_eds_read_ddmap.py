@@ -9,14 +9,25 @@ with pyeds.EDS("data.cdResult") as eds:
     # read single item
     item = next(eds.Read("ConsolidatedUnknownCompoundItem", limit=1))
     
-    # access ddmap value
+    # show type
     print(type(item.Area))
+    print("")
+    
+    # access ddmap value
+    print(item.Area)
     print(item.Area.Values)
     print(item.Area[0])
     print(item.Area.GetValue(0))
+    print("")
+    
+    # access extra info
     print(item.Area.GetBox(0).Name)
     print(item.Area.GetLevel(0).Name)
     print("")
+    
+    # build-in iterator
+    for value in item.Area:
+        print(value)
     
     # access ddmap of 'enums-like'
     print(type(item.AnnotationMatchStatus))
