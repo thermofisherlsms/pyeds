@@ -18,7 +18,7 @@ the linked Compounds sub-table directly shows the rank and SFit value for each
 compound.
 
 Although this example utilizes the tools even for exporting the data, it is not
-required. Data can be formated and exported using any favourite data framework
+required. Data can be formatted and exported using any favourite data framework
 instead. In such case, tab-separated values should be used for export. The full
 expected export path of each table is accessible as table.DataFile. The main
 response definition should be exported using response.ExportResponse().
@@ -36,6 +36,9 @@ TB_COMPOUNDS = "Compounds"
 TB_COMPOSITIONS = "Predicted Compositions"
 TB_FORMULAS_COMPOUNDS = "Formulas_Compounds"
 TB_FORMULAS_COMPOSITIONS = "Formulas_Compositions"
+
+# define elements to count
+ELEMENTS = ("C", "H", "N", "O", "S", "P", "F")
 
 
 def collect_formulas(result_path):
@@ -111,13 +114,10 @@ def init_response(response_path):
     formulas_t.AddColumn("Formula", pyeds.scripting.STRING)
     formulas_t.AddColumn("Molecular Weight", pyeds.scripting.FLOAT, FormatString="F5")
     formulas_t.AddColumn("# Compounds", pyeds.scripting.INT)
-    formulas_t.AddColumn("# C", pyeds.scripting.INT)
-    formulas_t.AddColumn("# H", pyeds.scripting.INT)
-    formulas_t.AddColumn("# N", pyeds.scripting.INT)
-    formulas_t.AddColumn("# O", pyeds.scripting.INT)
-    formulas_t.AddColumn("# S", pyeds.scripting.INT)
-    formulas_t.AddColumn("# P", pyeds.scripting.INT)
-    formulas_t.AddColumn("# F", pyeds.scripting.INT)
+    
+    # add elements
+    for el in ELEMENTS:
+        formulas_t.AddColumn(f"# {el}", pyeds.scripting.INT)
     
     # define compounds update table
     compounds_t = response.AddTable(TB_COMPOUNDS)
@@ -168,16 +168,14 @@ def fill_tables(response, formulas, counts):
         
         # get values
         compound_ids, composition_ids, mw, atoms, scores = formulas[formula]
-        C = atoms.get('C', 0)
-        H = atoms.get('H', 0)
-        N = atoms.get('N', 0)
-        O = atoms.get('O', 0)
-        S = atoms.get('S', 0)
-        P = atoms.get('P', 0)
-        F = atoms.get('F', 0)
+        
+        # collect main data
+        row_data = [formula_id, formula, mw, len(compound_ids)]
+        for el in ELEMENTS:
+            row_data.append(atoms.get(el, 0))
         
         # add to main table
-        formulas_t.AddRowData(formula_id, formula, mw, len(compound_ids), C, H, N, O, S, P, F)
+        formulas_t.AddRowData(*row_data)
         
         # add to connection tables
         for compound_id in compound_ids:
