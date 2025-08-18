@@ -8,6 +8,7 @@ import uuid
 from xml.sax.saxutils import escape
 from .converter import register, StringValueConverter, ImageValueConverter
 from .common import NumberConverter, DDMapConverter, StatusEnumConverter
+from .utils import interpolate_color, rgba_to_hex
 
 
 @register("20E15B78-40DF-48CA-9EFF-01FF2EBDCEDB")
@@ -69,7 +70,9 @@ class GapFillStatusEnumConverter(StatusEnumConverter):
         256: (255, 175, 50, 255),  # Imputed by low area value
         512: (255, 175, 50, 255),  # Imputed by group median
         1024: (255, 175, 50, 255),  # Imputed by Random Forest
-        2048: (255, 50, 50, 255)  # Skipped
+        2048: (255, 50, 50, 255),  # Skipped
+        4096: (255, 200, 50, 255),  # Filled by re-used peak
+        8192: (255, 200, 50, 255)  # Filled by unused peak
     }
 
 
@@ -92,12 +95,14 @@ class GapFillStatusDDMapConverter(DDMapConverter):
         256: "Imputed by low area value",
         512: "Imputed by group median",
         1024: "Imputed by Random Forest",
-        2048: "Skipped"
+        2048: "Skipped",
+        4096: "Filled by re-used peak",
+        8192: "Filled by unused peak"
     }
     
     LEVELS = {
         0: 1,
-        1: 64 | 128,
+        1: 64 | 128 | 4096 | 8192,
         2: 8 | 16 | 32,
         3: 4 | 256 | 512 | 1024,
         4: 2 | 2048
@@ -120,7 +125,7 @@ class GapFillStatusDDMapConverter(DDMapConverter):
         
         # get value
         value = prop.Value[index]
-        if value == 0:
+        if value == 0 or value is None:
             return self.DISPLAY_NAMES[1]
         
         # make labels
@@ -142,7 +147,7 @@ class GapFillStatusDDMapConverter(DDMapConverter):
         
         # get value
         value = prop.Value[index]
-        if value == 0:
+        if value == 0 or value is None:
             return self.COLORS[0]
         
         # get color
@@ -324,6 +329,32 @@ class WebLinkConverter(StringValueConverter):
         return (escape(str(prop.Value)),)
 
 
+@register("049EF53F-DE02-422F-B051-F0678E03832B")
+class MzCloud1WebLinkConverter(WebLinkConverter):
+    """Converts value into active web link."""
+    
+    URL = "https://mzcloud.org/DataViewer.Aspx#C%s%s"
+    
+    
+    def GetUrlValues(self, prop):
+        """Provides url."""
+        
+        return prop.Value.split('-')
+
+
+@register("8324856E-E547-4ED1-B344-56DDDE8B0F7B")
+class MzCloud2WebLinkConverter(WebLinkConverter):
+    """Converts value into active web link."""
+    
+    URL = "https://mzcloud2.cmdstage.thermofisher.com/DataViewer/app/dataviewer/library/%s?query=myCloudId=%s"
+    
+    
+    def GetUrlValues(self, prop):
+        """Provides url."""
+        
+        return prop.Value.split('/')
+
+
 @register("4D9457A0-818E-4A26-A2C1-6DD46B2300EF")
 class ChemSpiderWebLinkConverter(WebLinkConverter):
     """Converts value into active web link."""
@@ -338,14 +369,96 @@ class KEGGWebLinkConverter(WebLinkConverter):
     URL = "http://www.genome.jp/dbget-bin/www_bget?%s"
 
 
-@register("049EF53F-DE02-422F-B051-F0678E03832B")
-class MzCloudWebLinkConverter(WebLinkConverter):
+@register("6C8927E9-54F0-4C6D-BA36-6B2DC172A961")
+class HMDBWebLinkConverter(WebLinkConverter):
     """Converts value into active web link."""
     
-    URL = "https://mzcloud.org/DataViewer.Aspx#C%s%s"
+    URL = "https://www.hmdb.ca/metabolites/%s"
+
+
+@register("EEC52B62-E475-4FD5-9BE1-BCC40C5436DD")
+@register("C0699364-5E3A-41C9-9F27-690A41CC2385")
+class PubChemWebLinkConverter(WebLinkConverter):
+    """Converts value into active web link."""
+    
+    URL = "https://pubchem.ncbi.nlm.nih.gov/compound/%s"
+
+
+@register("E20AA096-5B91-40AE-A85F-562C29816869")
+class IsolationPurityConverter(NumberConverter):
+    """Converts isolation purity to background color."""
+    
+    GOOD_COLOR = (50, 205, 50, 255)
+    BAD_COLOR = (255, 175, 50, 255)
+    THRESHOLD = 50
     
     
-    def GetUrlValues(self, prop):
-        """Provides url."""
+    def GetCellStyle(self, prop):
+        """
+        Gets specific cell CSS style based on given value.
         
-        return prop.Value.split('-')
+        Args:
+            prop: pyeds.PropertyValue
+                Property to use.
+        
+        Returns:
+            str or None
+                CSS style or None for default.
+        """
+        
+        # check value
+        if prop.Value is None:
+            return None
+        
+        # below threshold
+        if prop.Value < self.THRESHOLD:
+            return self.BAD_COLOR
+        
+        # get gradient color
+        pos = (prop.Value - self.THRESHOLD) / (100 - self.THRESHOLD)
+        color = interpolate_color(self.BAD_COLOR, self.GOOD_COLOR, pos)
+        
+        return 'background-color:%s"' % rgba_to_hex(color)
+
+
+@register("F62B4AA7-94C2-41BB-B759-F6F99BEA299A")
+class PeakRatingConverter(NumberConverter):
+    """Converts peak rating to background color."""
+    
+    LEVELS = (0.0, 2.5, 5.0, 7.5, 10.0)
+    
+    COLORS = (
+        (255, 0, 0, 255),
+        (255, 175, 50, 255),
+        (255, 255, 0, 255),
+        (173, 255, 47, 255),
+        (50, 205, 50, 255))
+    
+    
+    def GetCellStyle(self, prop):
+        """
+        Gets specific cell CSS style based on given value.
+        
+        Args:
+            prop: pyeds.PropertyValue
+                Property to use.
+        
+        Returns:
+            str or None
+                CSS style or None for default.
+        """
+        
+        # check value
+        if prop.Value is None:
+            return None
+        
+        # init color
+        color = self.COLORS[-1]
+        
+        # below threshold
+        for i, threshold in enumerate(self.LEVELS):
+            if prop.Value < threshold:
+                color = self.COLORS[i]
+                break
+        
+        return 'background-color:%s"' % rgba_to_hex(color)

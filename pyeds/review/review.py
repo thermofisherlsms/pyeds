@@ -706,6 +706,8 @@ class Review(object):
         
         # no converter available
         if converter is None:
+            if prop.Value is None:
+                return ""
             return escape(str(prop.Value))
         
         # convert value
