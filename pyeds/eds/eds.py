@@ -586,7 +586,7 @@ class EDS(object):
         needs_view = self._attach_view_file(columns)
         
         # init SQL
-        sql = 'SELECT COUNT(*) FROM %s AS %s' % (data_type.TableName, data_type.T_ALIAS)
+        sql = "SELECT COUNT(*) FROM [%s] AS %s" % (data_type.TableName, data_type.T_ALIAS)
         values = []
         
         # add view file SQL
@@ -666,8 +666,8 @@ class EDS(object):
         # add link IDs
         buff = []
         for column in data_type.IDColumns:
-            buff.append('%s%s = %s' % (data_type.TableName, column.ColumnName, names[column.ColumnName]))
-        sql += ' INNER JOIN %s %s ON %s' % (connection.TableName, connection.T_ALIAS, ' AND '.join(buff))
+            buff.append("[%s%s] = %s" % (data_type.TableName, column.ColumnName, names[column.ColumnName]))
+        sql += " INNER JOIN [%s] %s ON %s" % (connection.TableName, connection.T_ALIAS, " AND ".join(buff))
         
         # add view file SQL
         if needs_view:
@@ -676,9 +676,9 @@ class EDS(object):
         # add parent IDs
         buff = []
         for column in parent.Type.IDColumns:
-            buff.append('%s%s = ?' % (parent.Type.TableName, column.ColumnName))
+            buff.append("[%s%s] = ?" % (parent.Type.TableName, column.ColumnName))
             values.append(parent.GetValue(column.ColumnName))
-        sql += ' WHERE (%s)' % (' AND '.join(buff))
+        sql += " WHERE (%s)" % (" AND ".join(buff))
         
         # finalize SQL
         sql, values = self._sql_main_file_finalize(sql, values, query, names)
@@ -784,8 +784,8 @@ class EDS(object):
         
         # add IDs to SQL
         id_cols = [names[c.ColumnName] for c in data_type.IDColumns]
-        id_cond = ['%s = ?' % c for c in id_cols]
-        sql += ' WHERE (%s)' % (' AND '.join(id_cond))
+        id_cond = ["%s = ?" % c for c in id_cols]
+        sql += " WHERE (%s)" % (" AND ".join(id_cond))
         
         # read items
         for values in ids:
@@ -856,13 +856,13 @@ class EDS(object):
         id_columns = [c.ColumnName for c in data_type.IDColumns]
         
         # get columns
-        cols = ", ".join('%s = ?' % c for c in columns)
+        cols = ", ".join("[%s] = ?" % c for c in columns)
         
         # get IDs
-        ids = " AND ".join('%s = ?' % c for c in id_columns)
+        ids = " AND ".join("[%s] = ?" % c for c in id_columns)
         
         # make SQL
-        sql = 'UPDATE %s SET %s WHERE %s' % (data_type.TableName, cols, ids)
+        sql = "UPDATE [%s] SET %s WHERE %s" % (data_type.TableName, cols, ids)
         
         # set values
         values = []
@@ -893,14 +893,14 @@ class EDS(object):
         for column in columns:
             
             # init SQL
-            sql = 'INSERT OR REPLACE INTO %s.%s_%s' % (VIEW_FILE_TAG, data_type.TableName, column)
+            sql = "INSERT OR REPLACE INTO %s.[%s_%s]" % (VIEW_FILE_TAG, data_type.TableName, column)
             
             # add IDs
-            ids = ", ".join('%s' % (c,) for c in id_columns)
-            sql += ' (%s, %s)' % (ids, column)
+            ids = ", ".join("[%s]" % (c,) for c in id_columns)
+            sql += " (%s, [%s])" % (ids, column)
             
             # add placeholders
-            sql += ' VALUES (%s) ;' % places
+            sql += " VALUES (%s) ;" % places
             
             # make values
             values = []
@@ -916,7 +916,7 @@ class EDS(object):
         
         # get current time stamp
         stamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep=" ")
-        stamp = stamp.replace('+00:00', 'Z')
+        stamp = stamp.replace("+00:00", "Z")
         
         # update data type
         data_type.Unlock()
@@ -924,7 +924,7 @@ class EDS(object):
         data_type.Lock()
         
         # make query
-        sql = 'UPDATE DataTypes SET LastChange = ? WHERE DataTypeID = ?'
+        sql = "UPDATE DataTypes SET LastChange = ? WHERE DataTypeID = ?"
         
         # get values
         values = (data_type.LastChange, data_type.ID)
@@ -938,7 +938,7 @@ class EDS(object):
         
         # get current time stamp
         stamp = datetime.datetime.now(datetime.timezone.utc).isoformat(sep=" ")
-        stamp = stamp.replace('+00:00', 'Z')
+        stamp = stamp.replace("+00:00", "Z")
         
         # update columns
         for col in columns:
@@ -947,7 +947,7 @@ class EDS(object):
             col.Lock()
         
         # make query
-        sql = 'UPDATE DataTypesColumns SET LastChange = ? WHERE ColumnId = ?'
+        sql = "UPDATE DataTypesColumns SET LastChange = ? WHERE ColumnId = ?"
         
         # get values
         values = [(c.LastChange, c.ID) for c in columns]
@@ -1001,11 +1001,11 @@ class EDS(object):
             return
         
         # make SQL for box update
-        sql = '''UPDATE DataDistributionBoxes SET
+        sql = """UPDATE DataDistributionBoxes SET
             Name = ?,
             Description = ?,
             Color = ?
-            WHERE BoxID = ? AND DataDistributionMapID = ?'''
+            WHERE BoxID = ? AND DataDistributionMapID = ?"""
         
         values = (
             tag_box.Name,
@@ -1018,9 +1018,9 @@ class EDS(object):
         self._report.Execute(sql, values)
         
         # make SQL for visibility update
-        sql = '''UPDATE DataDistributionBoxExtendedData SET
+        sql = """UPDATE DataDistributionBoxExtendedData SET
             ValueString = ?
-            WHERE BoxID = ? AND Name = ?'''
+            WHERE BoxID = ? AND Name = ?"""
         
         values = (
             tag_box.ExtendedData['EntityItemTagVisibility'],
@@ -1115,13 +1115,13 @@ class EDS(object):
             return
         
         # get columns
-        cols = ", ".join(columns)
+        cols = ", ".join(("[%s]" % c for c in columns))
         
         # get values placeholder
         places = ", ".join(["?"] * (len(columns)))
         
         # make SQL
-        sql = 'INSERT INTO %s (%s) VALUES (%s)' % (data_type.TableName, cols, places)
+        sql = "INSERT INTO [%s] (%s) VALUES (%s)" % (data_type.TableName, cols, places)
         
         # set values
         values = []
@@ -1140,17 +1140,17 @@ class EDS(object):
         
         # add sorting if not in query
         if order and "ORDER BY " not in query:
-            query += ' ORDER BY "%s"' % order
+            query += " ORDER BY '%s'" % order
             if desc:
-                query += ' DESC'
+                query += " DESC"
         
         # add limit if not in query
         if limit and "LIMIT " not in query:
-            query += ' LIMIT %d' % limit
+            query += " LIMIT %d" % limit
         
         # add offset if not in query
         if offset and "OFFSET " not in query:
-            query += ' OFFSET %d' % offset
+            query += " OFFSET %d" % offset
         
         # check query
         if not query:
@@ -1185,7 +1185,7 @@ class EDS(object):
                 
                 # make prefixed name
                 prefix = "" if column.IsInViewFile else alias
-                name = '%s%s' % (prefix, column.ColumnName)
+                name = "%s[%s]" % (prefix, column.ColumnName)
                 
                 # add to names by column name
                 names[column.ColumnName] = name
@@ -1301,7 +1301,7 @@ class EDS(object):
         cols = ", ".join(columns)
         
         # make SQL
-        sql = 'SELECT %s FROM %s AS %s' % (cols, data_type.TableName, data_type.T_ALIAS)
+        sql = "SELECT %s FROM [%s] AS %s" % (cols, data_type.TableName, data_type.T_ALIAS)
         
         return sql, []
     
@@ -1328,17 +1328,17 @@ class EDS(object):
         # add constraint
         if parsed['constraint']:
             if " WHERE " in sql:
-                sql += ' AND (%s)' % parsed['constraint']
+                sql += " AND (%s)" % parsed['constraint']
             else:
-                sql += ' WHERE %s' % parsed['constraint']
+                sql += " WHERE %s" % parsed['constraint']
         
         # add order by
         if parsed['orderby']:
-            sql += ' %s' % parsed['orderby']
+            sql += " %s" % parsed['orderby']
         
         # add limit
         if parsed['limit']:
-            sql += ' %s' % parsed['limit']
+            sql += " %s" % parsed['limit']
         
         return sql, values
     
@@ -1356,8 +1356,8 @@ class EDS(object):
         idx = 0
         for column in columns:
             idx += 1
-            ids = " AND ".join('%s.%s = V%d.%s' % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
-            sql += ' LEFT JOIN %s.%s_%s V%d ON %s' % (VIEW_FILE_TAG, data_type.TableName, column, idx, ids)
+            ids = " AND ".join("%s.[%s] = V%d.[%s]" % (data_type.T_ALIAS, c, idx, c) for c in id_columns)
+            sql += " LEFT JOIN %s.[%s_%s] V%d ON %s" % (VIEW_FILE_TAG, data_type.TableName, column, idx, ids)
         
         return sql
     

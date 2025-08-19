@@ -210,7 +210,7 @@ class Review(object):
             self.OpenSection()
         
         # get properties
-        properties = self._get_item_properties(item, hide)
+        properties = self._get_item_properties(item, hide, False)
         
         # close table and init new if necessary
         if self._table_name != item.Type.Name:
@@ -650,7 +650,7 @@ class Review(object):
         self._ddmap_sizes.add(size)
     
     
-    def _get_item_properties(self, item, hide):
+    def _get_item_properties(self, item, hide, autohide):
         """Gets available item properties."""
         
         # check hide
@@ -660,6 +660,12 @@ class Review(object):
         # get properties
         properties = []
         for prop in item.GetProperties():
+            
+            # autohide
+            if autohide and prop.Type.DataVisibility in (0, 1):
+                continue
+            
+            # check if hidden
             if prop.Type.ColumnName in hide or prop.Type.DisplayName in hide:
                 continue
             
