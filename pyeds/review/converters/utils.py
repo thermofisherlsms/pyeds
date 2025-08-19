@@ -1,5 +1,8 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
+# import modules
+from . icons import *
+
 
 def interpolate_color(color_a_rgba, color_b_rgba, pos):
     """Interpolates color between specified colors."""
@@ -23,3 +26,16 @@ def rgba_to_hex(color_rgba):
     """Converts color to hex format."""
     
     return "#%02x%02x%02x%02x" % color_rgba
+
+
+def make_warning_icon(label=None, width=None):
+    """Creates SVG for warning icon with optional label."""
+    
+    # get label tag
+    label_tag = LABEL_TAG % label if label else ""
+    
+    # get width
+    if width is None:
+        width = len(label) * 10 if label else 16
+    
+    return ICON_WARNING % (max(width, 16), label_tag)

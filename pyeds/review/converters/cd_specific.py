@@ -5,10 +5,11 @@ import os
 import os.path
 import tempfile
 import uuid
+import math
 from xml.sax.saxutils import escape
 from .converter import register, StringValueConverter, ImageValueConverter
 from .common import NumberConverter, DDMapConverter, StatusEnumConverter
-from .utils import interpolate_color, rgba_to_hex
+from .utils import interpolate_color, rgba_to_hex, make_warning_icon
 
 
 @register("20E15B78-40DF-48CA-9EFF-01FF2EBDCEDB")
@@ -189,7 +190,11 @@ class MOLStructureConverter(ImageValueConverter):
             from rdkit.Chem import Draw
             mol = AllChem.MolFromMolBlock(prop.Value)
         except ImportError:
-            return None
+            return make_warning_icon("no rdkit")
+        
+        # check mol
+        if mol is None:
+            return make_warning_icon("bad structure")
         
         # get image path
         filename = "%s.%s" % (str(uuid.uuid4()), "svg")
@@ -460,5 +465,45 @@ class PeakRatingConverter(NumberConverter):
             if prop.Value < threshold:
                 color = self.COLORS[i]
                 break
+        
+        return 'background-color:%s"' % rgba_to_hex(color)
+
+
+@register("862E50B3-FBCB-4232-94C3-55F95491ACC5")
+class PScoreConverter(NumberConverter):
+    """Converts score to background color."""
+    
+    GOOD_COLOR = (50, 205, 50, 255)
+    BAD_COLOR = (255, 175, 50, 255)
+    GOOD_THRESHOLD = 0.001
+    BAD_THRESHOLD = 0.05
+    
+    
+    def GetCellStyle(self, prop):
+        """
+        Gets specific cell CSS style based on given value.
+        
+        Args:
+            prop: pyeds.PropertyValue
+                Property to use.
+        
+        Returns:
+            str or None
+                CSS style or None for default.
+        """
+        
+        # check value
+        if prop.Value is None:
+            return None
+        
+        # below threshold
+        if prop.Value > self.BAD_THRESHOLD:
+            return self.BAD_COLOR
+        if prop.Value < self.GOOD_THRESHOLD:
+            return self.BAD_COLOR
+        
+        # get gradient color
+        pos = math.log10(prop.Value / self.GOOD_THRESHOLD) / math.log10(self.BAD_THRESHOLD / self.GOOD_THRESHOLD)
+        color = interpolate_color(self.GOOD_COLOR, self.BAD_COLOR, pos)
         
         return 'background-color:%s"' % rgba_to_hex(color)
