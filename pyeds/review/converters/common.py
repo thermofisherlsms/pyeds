@@ -261,7 +261,7 @@ class DDMapConverter(StringValueConverter):
     distribution maps into a heat-map-like table containing all values.
     """
     
-    CELL_CLASS = "nopadding center"
+    CELL_CLASS = "nopadding"
     TABLE_CLASS = ""
     NONE_COLOR = (200, 200, 200, 255)
     
@@ -279,11 +279,11 @@ class DDMapConverter(StringValueConverter):
                 Map values table HTML.
         """
         
-        # init HTML
-        html = "<table class=\"ddmap %s\"><tr>" % self.TABLE_CLASS
-        
         # get ddmap
         ddmap = prop.Type.SpecialValueType
+        
+        # init HTML
+        html = "<div class=\"ddmap ddmap_cols_%d %s\">" % (len(ddmap.Boxes), self.TABLE_CLASS)
         
         # format values
         for index in range(len(ddmap.Boxes)):
@@ -307,10 +307,10 @@ class DDMapConverter(StringValueConverter):
             style = self.GetBoxStyle(prop, index)
             
             # add to HTML
-            html += "<td title=\"%s\" class=\"%s\" style=\"%s\">%s</td>" % (tooltip, cls, style, value)
+            html += "<div title=\"%s\" class=\"%s\" style=\"%s\">%s</div>" % (tooltip, cls, style, value)
         
         # finalize HTML
-        html += "</tr></table>"
+        html += "</div>"
         
         return html
     

@@ -651,8 +651,7 @@ class Review(object):
             return
         
         # make css
-        css = ".ddmap td:first-child:nth-last-child(%s),\n" % size
-        css += ".ddmap td:first-child:nth-last-child(%s) ~ td{width: %.2f%%;}\n\n" % (size, 100./size)
+        css = ".ddmap_cols_%s { grid-template-columns: repeat(%s, 1fr); }\n" % (size, size)
         
         # write to CSS file
         self._css_file.write(css)
