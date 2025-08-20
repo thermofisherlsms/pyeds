@@ -193,10 +193,6 @@ class MOLStructureConverter(ImageValueConverter):
         except ImportError:
             return make_icon(ICON_INFO, "no rdkit")
         
-        # check mol
-        if mol is None:
-            return make_icon(ICON_ERROR, "bad structure")
-        
         # get image path
         filename = "%s.%s" % (str(uuid.uuid4()), "svg")
         path = os.path.join(tempfile.gettempdir(), filename)

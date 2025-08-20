@@ -9,6 +9,7 @@ import webbrowser
 from xml.sax.saxutils import escape
 from ..eds import EDS
 from .converters import CONVERTERS, ImageValueConverter
+from .converters import make_icon, ICON_ERROR, ICON_STOP
 
 
 GUID_PATTERN = re.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
@@ -228,11 +229,15 @@ class Review(object):
             converter = self._get_prop_converter(prop)
             
             # get content
-            content = self._get_prop_value(prop, converter)
-            
-            # get CSS
-            cls = self._get_cell_class(prop, converter)
-            style = converter.GetCellStyle(prop) if converter else None
+            try:
+                content = self._get_prop_value(prop, converter)
+                cls = self._get_cell_class(prop, converter)
+                style = converter.GetCellStyle(prop) if converter else None
+            except:
+                icon = make_icon(ICON_ERROR, "format error")
+                content = self._add_image(icon, 'svg')
+                cls = ""
+                style = ""
             
             # make HTML
             html += "        <td class=\"%s\" style=\"%s\">%s</td>\n" % (cls, style, content)
@@ -358,17 +363,23 @@ class Review(object):
         
         # skip if no converter found
         if converter is None:
+            icon = make_icon(ICON_ERROR, "no converter")
+            self.InsertImage(icon, 'svg')
             return
         
         # check converter
         if not isinstance(converter, ImageValueConverter):
-            raise TypeError("Converter mus be derived from 'pyeds.ImageValueConverter'!")
+            icon = make_icon(ICON_STOP, "invalid converter")
+            self.InsertImage(icon, 'svg')
+            return
         
-        # get image_data
-        image_data = converter.Convert(item, **kwargs)
-        
-        # insert image
-        self.InsertImage(image_data, converter.IMAGE_FORMAT)
+        # convert image
+        try:
+            image_data = converter.Convert(item, **kwargs)
+            self.InsertImage(image_data, converter.IMAGE_FORMAT)
+        except:
+            icon = make_icon(ICON_ERROR, "format error")
+            self.InsertImage(icon, 'svg')
     
     
     def InsertSpacer(self, height="2em"):

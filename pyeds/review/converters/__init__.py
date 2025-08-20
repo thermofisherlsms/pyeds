@@ -1,7 +1,7 @@
 #  Created by Martin Strohalm, Thermo Fisher Scientific
 
 # load main objects
-from .converter import CONVERTERS, register, StringValueConverter, ImageValueConverter
+from .converter import CONVERTERS, register, ValueConverter, StringValueConverter, ImageValueConverter
 from .common import NumberConverter, DDMapConverter, EnumConverter, StatusEnumConverter
 
 # register specific converters
