@@ -9,7 +9,8 @@ import math
 from xml.sax.saxutils import escape
 from .converter import register, StringValueConverter, ImageValueConverter
 from .common import NumberConverter, DDMapConverter, StatusEnumConverter
-from .utils import interpolate_color, rgba_to_hex, make_warning_icon
+from .utils import interpolate_color, rgba_to_hex, make_icon
+from .utils import ICON_INFO, ICON_WARNING, ICON_ERROR, ICON_STOP
 
 
 @register("20E15B78-40DF-48CA-9EFF-01FF2EBDCEDB")
@@ -190,11 +191,11 @@ class MOLStructureConverter(ImageValueConverter):
             from rdkit.Chem import Draw
             mol = AllChem.MolFromMolBlock(prop.Value)
         except ImportError:
-            return make_warning_icon("no rdkit")
+            return make_icon(ICON_INFO, "no rdkit")
         
         # check mol
         if mol is None:
-            return make_warning_icon("bad structure")
+            return make_icon(ICON_ERROR, "bad structure")
         
         # get image path
         filename = "%s.%s" % (str(uuid.uuid4()), "svg")
@@ -423,7 +424,7 @@ class IsolationPurityConverter(NumberConverter):
         pos = (prop.Value - self.THRESHOLD) / (100 - self.THRESHOLD)
         color = interpolate_color(self.BAD_COLOR, self.GOOD_COLOR, pos)
         
-        return 'background-color:%s"' % rgba_to_hex(color)
+        return 'background-color:%s"' % rgba_to_hex(*color)
 
 
 @register("F62B4AA7-94C2-41BB-B759-F6F99BEA299A")
@@ -466,7 +467,7 @@ class PeakRatingConverter(NumberConverter):
                 color = self.COLORS[i]
                 break
         
-        return 'background-color:%s"' % rgba_to_hex(color)
+        return 'background-color:%s"' % rgba_to_hex(*color)
 
 
 @register("862E50B3-FBCB-4232-94C3-55F95491ACC5")
@@ -506,4 +507,4 @@ class PScoreConverter(NumberConverter):
         pos = math.log10(prop.Value / self.GOOD_THRESHOLD) / math.log10(self.BAD_THRESHOLD / self.GOOD_THRESHOLD)
         color = interpolate_color(self.GOOD_COLOR, self.BAD_COLOR, pos)
         
-        return 'background-color:%s"' % rgba_to_hex(color)
+        return 'background-color:%s"' % rgba_to_hex(*color)

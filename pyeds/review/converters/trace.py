@@ -2,7 +2,7 @@
 
 # import modules
 from .converter import register, ImageValueConverter
-from ...report.converters.peak import PeakModel
+from .utils import make_icon, ICON_INFO
 
 # define constants
 RT_EPSILON = 0.00001
@@ -51,7 +51,7 @@ class TraceImageConverter(ImageValueConverter):
         try:
             from . import plotting
         except ImportError:
-            return None
+            return make_icon(ICON_INFO, "no matplotlib")
         
         # get trace
         trace = item.Trace

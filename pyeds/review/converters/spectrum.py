@@ -2,6 +2,7 @@
 
 # import modules
 from .converter import register, ImageValueConverter
+from .utils import make_icon, ICON_INFO
 
 
 @register("MassSpectrumItem")
@@ -40,7 +41,7 @@ class SpectrumImageConverter(ImageValueConverter):
         try:
             from . import plotting
         except ImportError:
-            return None
+            return make_icon(ICON_INFO, "no matplotlib")
         
         # get scan
         scan = item.Spectrum
