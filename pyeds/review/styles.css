@@ -60,7 +60,7 @@ th{
 }
 
 .sortable th{
-    cursor: n-resize;
+    cursor: ns-resize;
 }
 
 td{

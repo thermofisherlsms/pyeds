@@ -22,7 +22,7 @@ with eds, review:
     hide = ["Checked", "RTTolerance", "GroupAreas"]
     
     review.InsertHeader("Selected Compounds")
-    review.InsertItems(compounds, hide=hide)
+    review.InsertItems(compounds, hide=hide, sortable=True)
     
     # read compound details
     parent = compounds[1]
