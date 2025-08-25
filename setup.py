@@ -17,7 +17,7 @@ classifiers = [
 # main setup
 setup(
     name = 'pyeds',
-    version = '9.0.0',
+    version = '10.0.0',
     description = 'Provides easy access to Thermo Discoverer platform results.',
     url = 'https://github.com/thermofisherlsms/pyeds',
     author = 'Martin Strohalm, Thermo Fisher Scientific',
