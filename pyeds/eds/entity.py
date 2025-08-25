@@ -90,8 +90,14 @@ class EntityItem(Lockable):
     def __str__(self):
         """Gets standard string representation."""
         
-        names = [p.Type.ColumnName for p in self._properties]
-        return "%s (%s)" % (self._type.Name, ", ".join(names))
+        values = []
+        for prop in self._properties:
+            value = str(prop.Value).replace("\n", "")
+            if len(value) > 23:
+                value = value[:20] + "..."
+            values.append("%s[%s]" % (prop.Type, value))
+        
+        return "%s (%s)" % (self._type.Name, ", ".join(values))
     
     
     def __repr__(self):
