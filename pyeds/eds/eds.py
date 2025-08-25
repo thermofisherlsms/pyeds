@@ -462,7 +462,7 @@ class EDS(object):
             return
         
         # check items and get properties to update
-        properties = self._check_items_to_update(items, properties)
+        items, properties = self._check_items_to_update(items, properties)
         
         # no properties
         if not properties:
@@ -1055,7 +1055,7 @@ class EDS(object):
             return
         
         # check items and get properties to set
-        properties = self._check_items_to_update(items)
+        items, properties = self._check_items_to_update(items)
         
         # no properties
         if not properties:
@@ -1284,7 +1284,13 @@ class EDS(object):
                 raise ValueError("IDs must be unique for all items!")
             ids.add(item.IDs)
         
-        return properties
+        # keep changed items only
+        updated = []
+        for item in items:
+            if any(item.GetProperty(prop).IsDirty for prop in properties):
+                updated.append(item)
+        
+        return updated, properties
     
     
     def _sql_main_file_select(self, columns, data_type, names):
