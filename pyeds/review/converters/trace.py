@@ -84,7 +84,7 @@ class TraceImageConverter(ImageValueConverter):
         # finalize plot
         plotting.zoom(plot, x_range=zoom, y_range=y_range)
         plotting.margins(plot)
-        plotting.legend(plot, bool(title), fontsize=8)
+        plotting.legend(plot, bool(title), fontsize=8, loc=1)
         
         # make SVG image
         return plotting.svg(plot)
