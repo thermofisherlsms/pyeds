@@ -14,7 +14,7 @@ for node in workflow.Nodes:
     print(node)
 
 # get specific node
-node = workflow.GetNode(4)
+node = workflow.GetNode(1)
 
 # show node params
 print("")

@@ -7,10 +7,10 @@ import pyeds
 with pyeds.EDS("data.cdResult") as eds:
     
     # get parent
-    parent = next(eds.Read("ConsolidatedUnknownCompoundItem", query="ID = 1"))
+    parent = next(eds.Read("ConsolidatedUnknownCompoundItem", query="ID = 20"))
     
     # read directly connected
-    items = eds.ReadConnected("MzCloudSearchResultItem",
+    items = eds.ReadConnected("MzCloud2SearchResultItem",
         parent = parent,
         query = "MzLibraryMatchFactor > 90",
         order = "MzLibraryMatchFactor",
