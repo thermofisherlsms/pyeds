@@ -386,6 +386,20 @@ class PubChemWebLinkConverter(WebLinkConverter):
     URL = "https://pubchem.ncbi.nlm.nih.gov/compound/%s"
 
 
+@register("F37AF5A4-F3C5-4FCF-A00B-331CCEA7644B")
+class DSSToxWebLinkConverter(WebLinkConverter):
+    """Converts value into active web link."""
+    
+    URL = "https://comptox.epa.gov/dashboard/chemical/details/%s"
+
+
+@register("266DBB0A-AA6D-4613-BAAB-61B4FDB6F491")
+class ClassyFireWebLinkConverter(WebLinkConverter):
+    """Converts value into active web link."""
+    
+    URL = "http://classyfire.wishartlab.com/tax_nodes/%s"
+
+
 @register("E20AA096-5B91-40AE-A85F-562C29816869")
 class IsolationPurityConverter(NumberConverter):
     """Converts isolation purity to background color."""
@@ -467,8 +481,8 @@ class PeakRatingConverter(NumberConverter):
 
 
 @register("862E50B3-FBCB-4232-94C3-55F95491ACC5")
-class PScoreConverter(NumberConverter):
-    """Converts score to background color."""
+class PFASScoreConverter(NumberConverter):
+    """Converts PFAS score to background color."""
     
     GOOD_COLOR = (50, 205, 50, 255)
     BAD_COLOR = (255, 175, 50, 255)
