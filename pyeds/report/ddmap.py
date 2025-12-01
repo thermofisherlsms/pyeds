@@ -4,6 +4,7 @@
 import struct
 from .lockable import Lockable
 from .binary import Binary
+from .utils import rgba_from_argb_int
 
 # define constants
 _FORMAT = {'Int': "i?", 'Int64': "q?", 'Double': "d?", 'Boolean': "??"}
@@ -476,6 +477,34 @@ class DataDistributionBox(Lockable):
         """
         
         return self.Position - 1
+    
+    
+    @property
+    def ColorRGBAr(self):
+        """
+        Gets color as RGBAr channels.
+        
+        Returns:
+            (int, int, int, float)
+                RGB channels as 0-255 and alpha channel as 0-1.
+        """
+        
+        return rgba_from_argb_int(self.Color)
+    
+    
+    @property
+    def ColorRGBA(self):
+        """
+        Gets color as RGBA channels.
+        
+        Returns:
+            (int, int, int, int)
+                RGBA channels as 0-255.
+        """
+        
+        r, g, b, ar = rgba_from_argb_int(self.Color)
+        
+        return r, g, b, int(ar * 255)
     
     
     @staticmethod
