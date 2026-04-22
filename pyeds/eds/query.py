@@ -174,7 +174,7 @@ class EDSQuery(Query):
         
         # check element
         if expr_elm[0] != 'expression':
-            raise KeyError("Incorrect element! --> '%s" % expr_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % expr_elm[0])
         
         # parse elements
         for elm in expr_elm[1:]:
@@ -198,7 +198,7 @@ class EDSQuery(Query):
             
             # unknown rule
             else:
-                raise KeyError("Unknown rule! --> '%s" % elm_name)
+                raise KeyError("Unknown rule! --> '%s'" % elm_name)
         
         return parsed
     
@@ -210,7 +210,7 @@ class EDSQuery(Query):
         
         # check element
         if col_elm[0] != 'column':
-            raise KeyError("Incorrect element! --> '%s" % col_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % col_elm[0])
         
         # get simple column name
         if len(col_elm) == 2:
@@ -224,7 +224,7 @@ class EDSQuery(Query):
         if self._names is not None:
             name = self._names.get(column, None)
             if name is None:
-                raise KeyError("Unknown column in query! --> '%s" % column)
+                raise KeyError("Unknown column in query! --> '%s'" % column)
             column = name
         
         return column
@@ -237,7 +237,7 @@ class EDSQuery(Query):
         
         # check element
         if val_elm[0] != 'value':
-            raise KeyError("Incorrect element! --> '%s" % val_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % val_elm[0])
         
         # get simple value
         if len(val_elm) == 2:
@@ -257,7 +257,7 @@ class EDSQuery(Query):
         
         # check element
         if seq_elm[0] != 'sequence':
-            raise KeyError("Incorrect element! --> '%s" % seq_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % seq_elm[0])
         
         # parse elements
         for elm in seq_elm[1:]:
@@ -284,7 +284,7 @@ class EDSQuery(Query):
         
         # check element
         if con_elm[0] != 'constraint':
-            raise KeyError("Incorrect element! --> '%s" % con_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % con_elm[0])
         
         # parse elements
         for elm in con_elm[1:]:
@@ -310,7 +310,7 @@ class EDSQuery(Query):
             
             # unknown rule
             else:
-                raise KeyError("Unknown rule! --> '%s" % elm_name)
+                raise KeyError("Unknown rule! --> '%s'" % elm_name)
             
             # update SQL and values
             sqls += parsed[0]
@@ -328,7 +328,7 @@ class EDSQuery(Query):
         
         # check element
         if state_elm[0] != 'statement':
-            raise KeyError("Incorrect element! --> '%s" % state_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % state_elm[0])
         
         # parse elements
         for elm in state_elm[1:]:
@@ -358,7 +358,7 @@ class EDSQuery(Query):
             
             # unknown rule
             else:
-                raise KeyError("Unknown rule! --> '%s" % elm_name)
+                raise KeyError("Unknown rule! --> '%s'" % elm_name)
         
         # finalize SQL
         sql = "%s %s" % (column, sql)
@@ -371,7 +371,7 @@ class EDSQuery(Query):
         
         # check element
         if op_elm[0] != 'op':
-            raise KeyError("Incorrect element! --> '%s" % op_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % op_elm[0])
         
         # parse NOT LIKE
         if op_elm[1] == 'NOT':
@@ -389,7 +389,7 @@ class EDSQuery(Query):
         
         # check element
         if in_elm[0] != 'inside':
-            raise KeyError("Incorrect element! --> '%s" % in_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % in_elm[0])
         
         # parse IN
         if in_elm[1] == 'IN':
@@ -403,7 +403,7 @@ class EDSQuery(Query):
         
         # invalid element
         else:
-            raise KeyError("Incorrect IN element! --> '%s" % in_elm)
+            raise KeyError("Incorrect IN element! --> '%s'" % in_elm)
         
         return sql, values
     
@@ -413,7 +413,7 @@ class EDSQuery(Query):
         
         # check element
         if null_elm[0] != 'null':
-            raise KeyError("Incorrect element! --> '%s" % null_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % null_elm[0])
         
         # parse IS NULL
         if null_elm[2] == 'NULL':
@@ -425,7 +425,7 @@ class EDSQuery(Query):
         
         # invalid element
         else:
-            raise KeyError("Incorrect NULL element! --> '%s" % null_elm)
+            raise KeyError("Incorrect NULL element! --> '%s'" % null_elm)
     
     
     def _parse_group(self, group_elm):
@@ -433,7 +433,7 @@ class EDSQuery(Query):
         
         # check element
         if group_elm[0] != 'group':
-            raise KeyError("Incorrect element! --> '%s" % group_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % group_elm[0])
         
         # parse inner constraint
         sqls, values = self._parse_constraint(group_elm[2])
@@ -447,7 +447,7 @@ class EDSQuery(Query):
         
         # check element
         if ord_elm[0] != 'orderby':
-            raise KeyError("Incorrect element! --> '%s" % ord_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % ord_elm[0])
         
         # parse orders
         sqls = self._parse_orders(ord_elm[3])
@@ -465,7 +465,7 @@ class EDSQuery(Query):
         
         # check element
         if ord_elm[0] != 'orders':
-            raise KeyError("Incorrect element! --> '%s" % ord_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % ord_elm[0])
         
         # parse elements
         for elm in ord_elm[1:]:
@@ -492,7 +492,7 @@ class EDSQuery(Query):
         
         # check element
         if ord_elm[0] != 'order':
-            raise KeyError("Incorrect element! --> '%s" % ord_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % ord_elm[0])
         
         # parse elements
         for elm in ord_elm[1:]:
@@ -510,7 +510,7 @@ class EDSQuery(Query):
             
             # unknown rule
             else:
-                raise KeyError("Unknown rule! --> '%s" % elm_name)
+                raise KeyError("Unknown rule! --> '%s'" % elm_name)
         
         # finalize SQL
         sql = "%s %s" % (column, desc) if desc else column
@@ -523,7 +523,7 @@ class EDSQuery(Query):
         
         # check element
         if desc_elm[0] != 'desc':
-            raise KeyError("Incorrect element! --> '%s" % desc_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % desc_elm[0])
         
         # parse DESC
         if desc_elm[1] == 'DESC':
@@ -535,7 +535,7 @@ class EDSQuery(Query):
         
         # invalid element
         else:
-            raise KeyError("Incorrect DESC element! --> '%s" % desc_elm)
+            raise KeyError("Incorrect DESC element! --> '%s'" % desc_elm)
     
     
     def _parse_limit(self, lim_elm):
@@ -543,7 +543,7 @@ class EDSQuery(Query):
         
         # check element
         if lim_elm[0] != 'limit':
-            raise KeyError("Incorrect element! --> '%s" % lim_elm[0])
+            raise KeyError("Incorrect element! --> '%s'" % lim_elm[0])
         
         # finalize sql
         return " ".join(lim_elm[1:])
