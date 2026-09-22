@@ -12,6 +12,7 @@ with pyeds.EDS("data.cdResult") as eds:
     # read directly connected
     items = eds.ReadConnected("MzCloud2SearchResultItem",
         parent = parent,
+        properties = ["Name", "MatchTypeProperty", "MzLibraryMatchFactor"],
         query = "MzLibraryMatchFactor > 90",
         order = "MzLibraryMatchFactor",
         desc = True)

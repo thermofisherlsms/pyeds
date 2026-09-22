@@ -5,6 +5,7 @@ import datetime
 import os.path
 import time
 import shutil
+import sqlite3 as sqlite
 
 from .database import Database
 from .column import PropertyColumn
@@ -301,7 +302,7 @@ class Report(object):
             values: (?,)
                 Values to be used within SQL query.
         
-        Return:
+        Returns:
             sqlite.Cursor
                 Cursor pointing to query results.
         """
@@ -403,8 +404,11 @@ class Report(object):
         
         # detach view file
         if self._view_file_count == 0:
-            sql = 'DETACH %s' % VIEW_FILE_TAG
-            self.Execute(sql)
+            try:
+                sql = 'DETACH %s' % VIEW_FILE_TAG
+                self.Execute(sql)
+            except sqlite.OperationalError:
+                self._view_file_count = 1
     
     
     def _initialize(self):

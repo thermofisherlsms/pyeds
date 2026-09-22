@@ -7,36 +7,36 @@ from .grammar import Grammar
 _GRAMMAR = Grammar(
     
     # define keywords
-    log = 'AND | OR',
-    op = '<= | >= | != | = | < | > | LIKE | NOT LIKE',
-    null = 'IS NULL | IS NOT NULL',
-    desc = 'DESC | ASC',
+    log = r'AND | OR',
+    op = r'<= | >= | != | = | < | > | LIKE | NOT LIKE',
+    null = r'IS NULL | IS NOT NULL',
+    desc = r'DESC | ASC',
     
     # define columns
-    column = '[A-Za-z0-9_]+ | \' [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \' | \" [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \"',
+    column = r'[A-Za-z0-9_]+ | \' [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \' | \" [A-Za-z0-9-_\.\s\(\)\[\]\+\-#/:]+ \"',
     
     # define values
-    value = '[A-Za-z0-9-_%\.]+ | \' [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \' | \" [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \"',
-    sequence = 'value , sequence | value , | value',
+    value = r'[A-Za-z0-9-_%\.]+ | \' [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \' | \" [A-Za-z0-9-_%\.\s\(\)\[\]\+\-#/:]* \"',
+    sequence = r'value , sequence | value , | value',
     
     # define IN
-    inside = 'IN \( sequence \) | NOT IN \( sequence \)',
+    inside = r'IN \( sequence \) | NOT IN \( sequence \)',
     
     # define constraint
-    statement = 'column op value | column inside | column null',
-    group = '\( constraint \)',
+    statement = r'column op value | column inside | column null',
+    group = r'\( constraint \)',
     constraint = 'group log constraint | statement log constraint | group | statement',
     
     # define ORDER BY
-    order = 'column desc | column',
-    orders = 'order , orders | order , | order',
-    orderby = 'ORDER BY orders',
+    order = r'column desc | column',
+    orders = r'order , orders | order , | order',
+    orderby = r'ORDER BY orders',
     
     # define LIMIT
-    limit = 'LIMIT [0-9]+ OFFSET [0-9]+ | LIMIT [0-9]+ | OFFSET [0-9]+ ',
+    limit = r'LIMIT [0-9]+ OFFSET [0-9]+ | LIMIT [0-9]+ | OFFSET [0-9]+ ',
     
     # define full expression
-    expression = 'constraint orderby limit | constraint orderby | constraint limit | orderby limit | orderby | limit | constraint',
+    expression = r'constraint orderby limit | constraint orderby | constraint limit | orderby limit | orderby | limit | constraint',
 )
 
 

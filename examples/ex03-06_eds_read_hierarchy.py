@@ -14,6 +14,11 @@ with pyeds.EDS("data.cdResult") as eds:
     # read selected types only
     keep = ["ConsolidatedUnknownCompoundItem", "MassSpectrumInfoItem"]
     
+    # read selected properties only
+    properties = {
+        "ConsolidatedUnknownCompoundItem": ["ElementalCompositionFormula"],
+        "MassSpectrumInfoItem": ["MSOrder", "RetentionTime"]}
+    
     # read MS2 only
     queries = {"BestHitIonInstanceItem": "BestHitType = 2", "MassSpectrumInfoItem": "MSOrder = 2"}
     
@@ -25,7 +30,7 @@ with pyeds.EDS("data.cdResult") as eds:
     limits = {"ConsolidatedUnknownCompoundItem": 2}
     
     # read data
-    items = eds.ReadHierarchy(path, keep=keep, queries=queries, orders=orders, descs=descs, limits=limits)
+    items = eds.ReadHierarchy(path, keep=keep, queries=queries, properties=properties, orders=orders, descs=descs, limits=limits)
     for item in items:
         print(item.ElementalCompositionFormula)
         
