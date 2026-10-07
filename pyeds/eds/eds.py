@@ -18,7 +18,7 @@ class EDS(object):
     
     Please note that the 'query' provided for filtered reading is not a real SQL
     statement but rather its simplified version. It is now limited just to use
-    the column names, simple values defined by '[A-Za-z0-9-_\.%]+', quotes for
+    the column names, simple values defined by r'[A-Za-z0-9-_\.%]+', quotes for
     more complicated values and column names, grouping by '()' and following
     operators:
         'AND | OR'
@@ -776,7 +776,7 @@ class EDS(object):
         needs_view = self._attach_view_file(columns)
         
         # init SQL
-        sql, values = self._sql_main_file_select(columns, data_type, names)
+        sql, _ = self._sql_main_file_select(columns, data_type, names)
         
         # add view file SQL
         if needs_view:
