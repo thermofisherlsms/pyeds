@@ -11,7 +11,7 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         """Prepare test case data."""
         
-        self.result_file = "../examples/data.cdResult"
+        self.result_file = r"./data.cdResult"
     
     
     def test_read(self):
@@ -20,6 +20,7 @@ class TestCase(unittest.TestCase):
         with pyeds.EDS(self.result_file) as eds:
             
             props = eds.Report.GetDataType("ConsolidatedUnknownCompoundItem").Columns
+            props = [p for p in props if p.IsAvailable]
             
             items = eds.Read("ConsolidatedUnknownCompoundItem")
             for i, item in enumerate(items):

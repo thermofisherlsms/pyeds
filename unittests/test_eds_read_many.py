@@ -11,7 +11,7 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         """Prepare test case data."""
         
-        self.result_file = "../examples/data.cdResult"
+        self.result_file = r"./data.cdResult"
     
     
     def test_read_many(self):
