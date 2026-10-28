@@ -258,6 +258,28 @@ class Report(object):
         return False
     
     
+    def HasConnection(self, data_type_name_1, data_type_name_2):
+        """
+        Checks if specified entity data types connection exists.
+        
+        Args:
+            data_type_name_1: str
+                Data type name.
+            
+            data_type_name_2: str
+                Data type name.
+        
+        Returns:
+            bool
+                True if connection exists, False otherwise.
+        """
+        
+        if not self.HasDataType(data_type_name_1) or not not self.HasDataType(data_type_name_2):
+            return False
+        
+        return self.GetDataType(data_type_name_1).HasConnection(data_type_name_2)
+    
+    
     def HasViewFile(self):
         """
         Checks if view file exists.

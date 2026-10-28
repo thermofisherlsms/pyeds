@@ -522,6 +522,43 @@ class EDS(object):
             persist = persist)
     
     
+    def HasEntity(self, entity):
+        """
+        Returns True if given data type exists in current report file. False
+        otherwise.
+        
+        Args:
+            entity: str
+                Data type name.
+        
+        Returns:
+            bool
+                True if data type exists, False otherwise.
+        """
+        
+        return self._report.HasDataType(entity)
+    
+    
+    def HasConnection(self, entity1, entity2):
+        """
+        Returns True if there is a direct connection between given data types
+        in current report file. False otherwise.
+        
+        Args:
+            entity1: str
+                Data type name.
+            
+            entity2: str
+                Data type name.
+        
+        Returns:
+            bool
+                True if connection exists, False otherwise.
+        """
+        
+        return self._report.HasConnection(entity)
+    
+    
     def _get_paths(self, data_type1, data_type2, best_length, _length=1, _visited=None):
         """Finds paths between two data types."""
         
